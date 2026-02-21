@@ -179,21 +179,20 @@ class TradingOrchestrator:
                 self.sensex_ce_ltp = ltp
                 if self.trade_mode == "paper" and hasattr(self.order_svc, 'update_price'):
                     self.order_svc.update_price(symbol, ltp)
-                await self._process_leg("SENSEX", "CE", ltp, volume)
+                await self._process_leg("SENSEX", "CE", ltp, volume, st_key="SENSEX_CE")
             elif symbol == self.sensex_pe_symbol and self.sensex_enabled:
                 self.sensex_pe_ltp = ltp
                 if self.trade_mode == "paper" and hasattr(self.order_svc, 'update_price'):
                     self.order_svc.update_price(symbol, ltp)
-                await self._process_leg("SENSEX", "PE", ltp, volume)
+                await self._process_leg("SENSEX", "PE", ltp, volume, st_key="SENSEX_PE")
         except Exception as e:
             logger.error(f"WS data error: {e}")
 
-    async def _process_leg(self, index: str, leg: str, price: float, volume: float):
+    async def _process_leg(self, index: str, leg: str, price: float, volume: float, st_key: str = None):
         if not self.strategy or not self.order_svc:
             return
 
-        # Use combined key for SENSEX legs
-        st_leg = f"{index}_{leg}" if index == "SENSEX" else leg
+        st_leg = st_key or (f"{index}_{leg}" if index == "SENSEX" else leg)
         symbol = (self.sensex_ce_symbol if index == "SENSEX" and leg == "CE"
                   else self.sensex_pe_symbol if index == "SENSEX" and leg == "PE"
                   else self.ce_symbol if leg == "CE" else self.pe_symbol)
@@ -289,8 +288,10 @@ class TradingOrchestrator:
         self.fyers.stop_websocket()
 
     def get_status(self) -> dict:
-        ce_st = self.strategy.get_supertrend_info("CE") if self.strategy else {}
-        pe_st = self.strategy.get_supertrend_info("PE") if self.strategy else {}
+        ce_st        = self.strategy.get_supertrend_info("CE")        if self.strategy else {}
+        pe_st        = self.strategy.get_supertrend_info("PE")        if self.strategy else {}
+        sensex_ce_st = self.strategy.get_supertrend_info("SENSEX_CE") if self.strategy else {}
+        sensex_pe_st = self.strategy.get_supertrend_info("SENSEX_PE") if self.strategy else {}
         return {
             "nifty_spot":      self.nifty_spot,
             "sensex_spot":     self.sensex_spot,
@@ -309,9 +310,11 @@ class TradingOrchestrator:
             "daily_pnl":       self.strategy.daily_pnl if self.strategy else 0,
             "daily_trades":    self.strategy.daily_trades if self.strategy else 0,
             "is_halted":       self.strategy.is_halted if self.strategy else False,
-            "ce_supertrend":   ce_st,
-            "pe_supertrend":   pe_st,
-            "is_running":      self.is_running,
+            "ce_supertrend":        ce_st,
+            "pe_supertrend":        pe_st,
+            "sensex_ce_supertrend": sensex_ce_st,
+            "sensex_pe_supertrend": sensex_pe_st,
+            "is_running":           self.is_running,
             "trade_mode":      self.trade_mode,
             "nifty_enabled":   self.nifty_enabled,
             "sensex_enabled":  self.sensex_enabled,

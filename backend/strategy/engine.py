@@ -95,8 +95,10 @@ class StrategyEngine:
         self.max_daily_loss = max_daily_loss
         self.max_trades = max_trades
         
-        self.ce = LegState("CE")
-        self.pe = LegState("PE")
+        self.ce        = LegState("CE")
+        self.pe        = LegState("PE")
+        self.sensex_ce = LegState("SENSEX_CE")
+        self.sensex_pe = LegState("SENSEX_PE")
         
         self.daily_pnl = 0.0
         self.daily_trades = 0
@@ -121,7 +123,10 @@ class StrategyEngine:
                 logger.error(f"Callback error: {e}")
 
     def _get_leg(self, leg: str) -> LegState:
-        return self.ce if leg == "CE" else self.pe
+        return {
+            "CE": self.ce, "PE": self.pe,
+            "SENSEX_CE": self.sensex_ce, "SENSEX_PE": self.sensex_pe
+        }.get(leg, self.ce)
 
     def is_entry_allowed(self) -> bool:
         now = datetime.now().time()
@@ -246,8 +251,10 @@ class StrategyEngine:
         }
 
     def reset_day(self):
-        self.ce = LegState("CE")
-        self.pe = LegState("PE")
+        self.ce        = LegState("CE")
+        self.pe        = LegState("PE")
+        self.sensex_ce = LegState("SENSEX_CE")
+        self.sensex_pe = LegState("SENSEX_PE")
         self.daily_pnl = 0.0
         self.daily_trades = 0
         self.is_halted = False

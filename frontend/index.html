@@ -278,23 +278,101 @@ tr:hover td{background:rgba(255,255,255,.02)}
     </div>
   </div>
 
-  <!-- Supertrend -->
-  <div class="card" style="margin-top:16px">
-    <div class="ct">🔮 Supertrend (10,3)</div>
-    <div class="g2">
-      <div>
-        <div style="color:#64748b;font-size:11px;text-transform:uppercase;margin-bottom:8px">CE — <span id="ceSymLbl" style="color:#60a5fa;text-transform:none">--</span></div>
-        <div id="ceST" class="stbox st-wait"><span style="color:#475569">Waiting...</span></div>
+  <!-- Supertrend — two index cards side by side -->
+  <div class="g2" style="margin-top:0">
+
+    <!-- NIFTY Supertrend Card -->
+    <div class="card" style="margin:0;border:1px solid #1e3a5f">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div class="ct" style="margin:0">🔮 NIFTY Supertrend</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span id="niftyEngineStatus" style="font-size:11px;color:#475569">● IDLE</span>
+          <div class="tpill off" id="niftyTradePill" onclick="toggleIndexLive('nifty')" style="cursor:pointer;width:36px;height:20px">
+            <div class="tknob" style="width:16px;height:16px;top:2px"></div>
+          </div>
+        </div>
       </div>
+      <!-- CE -->
+      <div style="margin-bottom:10px">
+        <div style="color:#64748b;font-size:11px;text-transform:uppercase;margin-bottom:6px;display:flex;justify-content:space-between">
+          <span>CE — <span id="ceSymLbl" style="color:#60a5fa;text-transform:none;font-size:11px">--</span></span>
+          <span id="ceLtpLive" style="color:#60a5fa;font-family:monospace">--</span>
+        </div>
+        <div id="ceST" class="stbox st-wait"><span style="color:#475569;font-size:13px">Waiting for candle data...</span></div>
+      </div>
+      <!-- PE -->
       <div>
-        <div style="color:#64748b;font-size:11px;text-transform:uppercase;margin-bottom:8px">PE — <span id="peSymLbl" style="color:#f87171;text-transform:none">--</span></div>
-        <div id="peST" class="stbox st-wait"><span style="color:#475569">Waiting...</span></div>
+        <div style="color:#64748b;font-size:11px;text-transform:uppercase;margin-bottom:6px;display:flex;justify-content:space-between">
+          <span>PE — <span id="peSymLbl" style="color:#f87171;text-transform:none;font-size:11px">--</span></span>
+          <span id="peLtpLive" style="color:#f87171;font-family:monospace">--</span>
+        </div>
+        <div id="peST" class="stbox st-wait"><span style="color:#475569;font-size:13px">Waiting for candle data...</span></div>
+      </div>
+      <!-- NIFTY P&L strip -->
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <div class="sbox" style="flex:1;padding:8px 12px">
+          <div class="sl">Today P&L</div>
+          <div class="sv" id="niftyDayPnl" style="font-size:16px;color:#4ade80">₹0</div>
+        </div>
+        <div class="sbox" style="flex:1;padding:8px 12px">
+          <div class="sl">Trades</div>
+          <div class="sv" id="niftyDayTrades" style="font-size:16px;color:#c084fc">0</div>
+        </div>
+        <div class="sbox" style="flex:1;padding:8px 12px">
+          <div class="sl">Open</div>
+          <div class="sv" id="niftyOpenPos" style="font-size:16px;color:#38bdf8">0</div>
+        </div>
       </div>
     </div>
-  </div>
+
+    <!-- SENSEX Supertrend Card -->
+    <div class="card" style="margin:0;border:1px solid #2d1a4e" id="sensexSTCard">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div class="ct" style="margin:0;color:#c084fc">🔮 SENSEX Supertrend</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span id="sensexEngineStatus" style="font-size:11px;color:#475569">● IDLE</span>
+          <div class="tpill off" id="sensexTradePill" onclick="toggleIndexLive('sensex')" style="cursor:pointer;width:36px;height:20px">
+            <div class="tknob" style="width:16px;height:16px;top:2px"></div>
+          </div>
+        </div>
+      </div>
+      <!-- CE -->
+      <div style="margin-bottom:10px">
+        <div style="color:#64748b;font-size:11px;text-transform:uppercase;margin-bottom:6px;display:flex;justify-content:space-between">
+          <span>CE — <span id="sensexCeSymLbl" style="color:#60a5fa;text-transform:none;font-size:11px">--</span></span>
+          <span id="sensexCeLtpLive" style="color:#60a5fa;font-family:monospace">--</span>
+        </div>
+        <div id="sensexCeST" class="stbox st-wait"><span style="color:#475569;font-size:13px">Enable SENSEX to start</span></div>
+      </div>
+      <!-- PE -->
+      <div>
+        <div style="color:#64748b;font-size:11px;text-transform:uppercase;margin-bottom:6px;display:flex;justify-content:space-between">
+          <span>PE — <span id="sensexPeSymLbl" style="color:#f87171;text-transform:none;font-size:11px">--</span></span>
+          <span id="sensexPeLtpLive" style="color:#f87171;font-family:monospace">--</span>
+        </div>
+        <div id="sensexPeST" class="stbox st-wait"><span style="color:#475569;font-size:13px">Enable SENSEX to start</span></div>
+      </div>
+      <!-- SENSEX P&L strip -->
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <div class="sbox" style="flex:1;padding:8px 12px">
+          <div class="sl">Today P&L</div>
+          <div class="sv" id="sensexDayPnl" style="font-size:16px;color:#4ade80">₹0</div>
+        </div>
+        <div class="sbox" style="flex:1;padding:8px 12px">
+          <div class="sl">Trades</div>
+          <div class="sv" id="sensexDayTrades" style="font-size:16px;color:#c084fc">0</div>
+        </div>
+        <div class="sbox" style="flex:1;padding:8px 12px">
+          <div class="sl">Open</div>
+          <div class="sv" id="sensexOpenPos" style="font-size:16px;color:#38bdf8">0</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /g2 supertrend -->
 
   <!-- Engine Controls -->
-  <div class="card">
+  <div class="card" style="margin-top:16px">
     <div class="ct">🚀 Trading Engine</div>
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <button class="btn bg" id="startBtn" onclick="startTrading()">▶ Start</button>
@@ -303,8 +381,8 @@ tr:hover td{background:rgba(255,255,255,.02)}
     </div>
     <div id="activeInfo" style="display:none;margin-top:12px;padding:12px;background:#0f172a;border-radius:8px;font-size:13px;color:#94a3b8">
       <span style="color:#4ade80;font-weight:600">● LIVE</span>
-      &nbsp;|&nbsp; NIFTY: <code id="ceSymA" style="color:#60a5fa">--</code> / <code id="peSymA" style="color:#f87171">--</code>
-      <span id="sensexActiveInfo"></span>
+      <span id="niftyActiveChip" style="display:none">&nbsp;|&nbsp; <span style="color:#60a5fa;font-size:11px">NIFTY</span> <code id="ceSymA" style="color:#60a5fa">--</code>/<code id="peSymA" style="color:#f87171">--</code></span>
+      <span id="sensexActiveChip" style="display:none">&nbsp;|&nbsp; <span style="color:#c084fc;font-size:11px">SENSEX</span> <code id="sensexCeSymA" style="color:#60a5fa">--</code>/<code id="sensexPeSymA" style="color:#f87171">--</code></span>
     </div>
   </div>
 
@@ -610,6 +688,16 @@ function setMode(m){
   pill.className='mode-pill mode-'+(m==='paper'?'paper':'real');
 }
 
+function setPill(id, on){
+  const el=document.getElementById(id); if(!el)return;
+  el.className='tpill '+(on?'on':'off');
+}
+
+function toggleIndexLive(idx){
+  // This toggles the index selection before starting — same as clicking the index button
+  toggleIndex(idx);
+}
+
 function toggleIndex(idx){
   if(idx==='nifty'){
     niftyOn=!niftyOn;
@@ -681,8 +769,67 @@ async function pollDash(){
     set('usedMargin',  used!=null?'₹'+num(used):'--');
     set('usedMargin2', used!=null?'₹'+num(used):'--');
 
+    // NIFTY supertrend
     renderST('ceST', d.ce_supertrend);
     renderST('peST', d.pe_supertrend);
+
+    // Live LTP next to symbol labels
+    set('ceLtpLive',  d.ce_ltp  ? '₹'+d.ce_ltp.toFixed(2)  : '--');
+    set('peLtpLive',  d.pe_ltp  ? '₹'+d.pe_ltp.toFixed(2)  : '--');
+    set('sensexCeLtpLive', d.sensex_ce_ltp ? '₹'+d.sensex_ce_ltp.toFixed(2) : '--');
+    set('sensexPeLtpLive', d.sensex_pe_ltp ? '₹'+d.sensex_pe_ltp.toFixed(2) : '--');
+
+    // SENSEX supertrend
+    if(d.sensex_enabled){
+      set('sensexCeSymLbl', d.sensex_ce_symbol||'--');
+      set('sensexPeSymLbl', d.sensex_pe_symbol||'--');
+      renderST('sensexCeST', d.sensex_ce_supertrend);
+      renderST('sensexPeST', d.sensex_pe_supertrend);
+      document.getElementById('sensexEngineStatus').textContent = running ? '● LIVE' : '● IDLE';
+      document.getElementById('sensexEngineStatus').style.color = running ? '#4ade80' : '#475569';
+      setPill('sensexTradePill', running && d.sensex_enabled);
+    } else {
+      document.getElementById('sensexCeST').className='stbox st-wait';
+      document.getElementById('sensexCeST').innerHTML='<span style="color:#475569;font-size:13px">Toggle SENSEX above to enable</span>';
+      document.getElementById('sensexPeST').className='stbox st-wait';
+      document.getElementById('sensexPeST').innerHTML='<span style="color:#475569;font-size:13px">Toggle SENSEX above to enable</span>';
+    }
+
+    // NIFTY engine status pill
+    document.getElementById('niftyEngineStatus').textContent = running && d.nifty_enabled ? '● LIVE' : '● IDLE';
+    document.getElementById('niftyEngineStatus').style.color = running && d.nifty_enabled ? '#4ade80' : '#475569';
+    setPill('niftyTradePill', running && d.nifty_enabled);
+
+    // Active info chips
+    const ni=document.getElementById('niftyActiveChip');
+    const si=document.getElementById('sensexActiveChip');
+    if(running){
+      if(d.nifty_enabled){ ni.style.display='inline'; set('ceSymA',d.ce_symbol||'--'); set('peSymA',d.pe_symbol||'--'); } else ni.style.display='none';
+      if(d.sensex_enabled){ si.style.display='inline'; set('sensexCeSymA',d.sensex_ce_symbol||'--'); set('sensexPeSymA',d.sensex_pe_symbol||'--'); } else si.style.display='none';
+    } else { ni.style.display='none'; si.style.display='none'; }
+
+    // Per-index stats from positions
+    updateIndexStats(d);
+  }catch(e){ console.error('pollDash',e); }
+}
+
+async function updateIndexStats(d){
+  try{
+    const pos = await api('/positions/open');
+    const today = await api('/positions/today');
+    // NIFTY
+    const nOpen = pos.filter(p=>!p.symbol.includes('SENSEX')).length;
+    const nTrades = today.filter(p=>!p.symbol.includes('SENSEX')).length;
+    const nPnl = today.filter(p=>!p.symbol.includes('SENSEX')).reduce((s,t)=>s+(t.pnl||0),0);
+    // SENSEX
+    const sOpen = pos.filter(p=>p.symbol.includes('SENSEX')).length;
+    const sTrades = today.filter(p=>p.symbol.includes('SENSEX')).length;
+    const sPnl = today.filter(p=>p.symbol.includes('SENSEX')).reduce((s,t)=>s+(t.pnl||0),0);
+
+    set('niftyOpenPos', nOpen); set('niftyDayTrades', nTrades);
+    const np=document.getElementById('niftyDayPnl'); np.textContent='₹'+nPnl.toFixed(0); np.style.color=nPnl>=0?'#4ade80':'#f87171';
+    set('sensexOpenPos', sOpen); set('sensexDayTrades', sTrades);
+    const sp=document.getElementById('sensexDayPnl'); sp.textContent='₹'+sPnl.toFixed(0); sp.style.color=sPnl>=0?'#4ade80':'#f87171';
   }catch(e){}
 }
 
