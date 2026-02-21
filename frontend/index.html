@@ -1,951 +1,2107 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>NIFTY Options Bot</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:#0a0e1a;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh}
-.header{background:linear-gradient(135deg,#1a1f35,#0f172a);border-bottom:1px solid #1e293b;padding:12px 24px;display:flex;justify-content:space-between;align-items:center}
-.logo{font-size:20px;font-weight:700;color:#60a5fa}
-.hright{display:flex;align-items:center;gap:12px}
-.status-badge{padding:4px 14px;border-radius:20px;font-size:12px;font-weight:700}
-.live{background:#00ff88;color:#000}.stopped{background:#374151;color:#9ca3af}
-.mode-pill{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.5px}
-.mode-real{background:#7c3aed;color:#fff}.mode-paper{background:#d97706;color:#000}
-.clock{color:#475569;font-size:12px;font-family:monospace}
-.tabs{display:flex;background:#0f172a;border-bottom:1px solid #1e293b;padding:0 16px;gap:4px}
-.tab{background:none;border:none;color:#64748b;padding:13px 18px;cursor:pointer;font-size:14px;font-weight:500;border-bottom:3px solid transparent;transition:all .2s}
-.tab:hover{color:#94a3b8}.tab.active{color:#60a5fa;border-bottom:3px solid #60a5fa}
-.content{padding:24px}
-.page{display:none}.page.active{display:block}
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
-.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
-.card{background:#1e293b;border-radius:12px;padding:20px;border:1px solid #334155;margin-bottom:16px}
-.ct{color:#94a3b8;font-size:11px;font-weight:600;margin-bottom:16px;text-transform:uppercase;letter-spacing:.8px}
-.sbox{background:#0f172a;border-radius:8px;padding:12px 16px}
-.sl{font-size:11px;color:#64748b;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
-.sv{font-size:22px;font-weight:700;font-family:monospace}
-/* Supertrend */
-.stbox{border-radius:8px;padding:14px 16px;transition:all .3s}
-.st-bull{background:#052e16;border:1px solid #16a34a}
-.st-bear{background:#2d0000;border:1px solid #dc2626}
-.st-wait{background:#1e293b;border:1px solid #334155}
-/* Auth */
-.auth-banner{border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:12px;margin-bottom:16px}
-.ab-ok{background:#052e16;border:1px solid #16a34a}
-.ab-pend{background:#1c1400;border:1px solid #d97706}
-.ab-none{background:#1e293b;border:1px solid #334155}
-.adot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
-.dg{background:#64748b}.dy{background:#fbbf24}.dgreen{background:#4ade80}
-/* Steps */
-.steps{display:flex;margin-bottom:24px}
-.step{flex:1;text-align:center;position:relative}
-.step:not(:last-child)::after{content:'';position:absolute;top:15px;left:60%;width:80%;height:2px;background:#1e293b;z-index:0}
-.step.done::after{background:#16a34a}
-.sc{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:12px;font-weight:700;position:relative;z-index:1;border:2px solid #334155;background:#0f172a;color:#64748b}
-.step.done .sc{background:#052e16;border-color:#16a34a;color:#4ade80}
-.step.active .sc{background:#1d4ed8;border-color:#3b82f6;color:#fff}
-.step-lbl{font-size:11px;color:#64748b}
-.step.done .step-lbl{color:#4ade80}.step.active .step-lbl{color:#60a5fa}
-/* Spinner */
-.spin{display:inline-block;width:16px;height:16px;border:2px solid #334155;border-top-color:#60a5fa;border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle}
-@keyframes spin{to{transform:rotate(360deg)}}
-/* Forms */
-label{display:block;color:#94a3b8;font-size:12px;margin-bottom:6px;margin-top:14px;font-weight:500}
-label:first-child{margin-top:0}
-input,select{width:100%;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:10px 12px;color:#e2e8f0;font-size:14px;outline:none;transition:border .2s}
-input:focus,select:focus{border-color:#60a5fa}
-input::placeholder{color:#475569}
-/* Buttons */
-.btn{border:none;border-radius:8px;padding:10px 20px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:6px}
-.btn:hover{opacity:.9;transform:translateY(-1px)}.btn:active{transform:none}
-.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
-.bg{background:#16a34a}.br{background:#dc2626}.bb{background:#1d4ed8}
-.bp{background:#7c3aed}.by{background:#d97706}.bgr{background:#374151}
-.btn-sm{padding:6px 14px;font-size:12px}
-.btn-out{background:transparent;border:1px solid #334155;color:#94a3b8}
-.btn-out:hover{border-color:#60a5fa;color:#60a5fa}
-.btn-login{background:linear-gradient(135deg,#1d4ed8,#7c3aed);padding:14px 32px;font-size:15px;border-radius:10px;box-shadow:0 4px 15px rgba(29,78,216,.3)}
-/* Toggle switch */
-.trow{display:flex;align-items:center;justify-content:space-between;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:10px 14px;cursor:pointer}
-.trow:hover{border-color:#475569}
-.tpill{width:42px;height:24px;border-radius:12px;position:relative;transition:background .2s;flex-shrink:0}
-.tpill.on{background:#16a34a}.tpill.off{background:#374151}
-.tknob{width:20px;height:20px;background:#fff;border-radius:50%;position:absolute;top:2px;transition:left .2s}
-.tpill.on .tknob{left:20px}.tpill.off .tknob{left:2px}
-/* Mode toggle */
-.mode-toggle{display:flex;background:#0f172a;border:1px solid #334155;border-radius:10px;padding:4px;gap:4px}
-.mode-btn{flex:1;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;color:#64748b;background:transparent}
-.mode-btn.active-real{background:#7c3aed;color:#fff}
-.mode-btn.active-paper{background:#d97706;color:#000}
-/* Index toggles */
-.idx-toggle{display:flex;gap:10px;margin-bottom:16px}
-.idx-btn{flex:1;border:2px solid #334155;border-radius:10px;padding:12px;cursor:pointer;background:#0f172a;text-align:center;transition:all .2s}
-.idx-btn:hover{border-color:#475569}
-.idx-btn.active-nifty{border-color:#60a5fa;background:#0c1a33}
-.idx-btn.active-sensex{border-color:#c084fc;background:#1a0a33}
-.idx-label{font-size:12px;font-weight:700;margin-bottom:4px}
-.idx-val{font-size:18px;font-weight:700;font-family:monospace}
-/* Tables */
-table{width:100%;border-collapse:collapse;background:#1e293b;border-radius:12px;overflow:hidden}
-th{padding:11px 14px;text-align:left;font-size:11px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.4px;background:#0f172a;white-space:nowrap}
-td{padding:11px 14px;font-size:13px;border-bottom:1px solid #0f172a}
-tr:last-child td{border:none}
-tr:hover td{background:rgba(255,255,255,.02)}
-.bdg{padding:2px 7px;border-radius:4px;font-size:11px;font-weight:600}
-.bce{background:#1e3a5f;color:#60a5fa}.bpe{background:#3d1a1a;color:#f87171}
-.bop{background:#052e16;color:#4ade80}.bcl{background:#1e293b;color:#94a3b8;border:1px solid #334155}
-.bpaper{background:#1c1400;color:#fbbf24;border:1px solid #92400e}
-.pp{color:#4ade80;font-weight:600}.pn{color:#f87171;font-weight:600}
-/* Messages */
-.msg{padding:10px 14px;border-radius:8px;font-size:13px;margin:10px 0;display:flex;align-items:center;gap:8px}
-.mok{background:#052e16;color:#4ade80;border:1px solid #166534}
-.merr{background:#2d0000;color:#f87171;border:1px solid #7f1d1d}
-.minf{background:#0c1a33;color:#60a5fa;border:1px solid #1e3a5f}
-/* Sub tabs */
-.stabs{display:flex;gap:8px;margin-bottom:16px}
-.stab{border:1px solid #334155;background:#1e293b;color:#64748b;padding:7px 14px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;transition:all .2s}
-.stab:hover{color:#94a3b8}.stab.active{background:#1d4ed8;color:#fff;border-color:#1d4ed8}
-.empty{text-align:center;padding:60px 20px;color:#475569}
-.divider{height:1px;background:#1e293b;margin:16px 0}
-/* Login waiting animation */
-.waiting-box{text-align:center;padding:24px;background:#0c1a33;border:1px solid #1e3a5f;border-radius:12px}
-</style>
-</head>
-<body>
-
-<div class="header">
-  <div style="display:flex;align-items:center;gap:14px">
-    <span class="logo">⚡ Options Bot</span>
-    <span class="status-badge stopped" id="statusBadge">🔴 STOPPED</span>
-    <span class="mode-pill mode-paper" id="modePill" style="display:none">PAPER</span>
-  </div>
-  <div class="hright">
-    <span class="clock" id="clk"></span>
-  </div>
-</div>
-
-<div class="tabs">
-  <button class="tab active" onclick="showTab('broker',this)">🔌 Broker</button>
-  <button class="tab" onclick="showTab('dashboard',this)">📊 Dashboard</button>
-  <button class="tab" onclick="showTab('positions',this)">📋 Positions</button>
-  <button class="tab" onclick="showTab('pnl',this)">💰 P&amp;L</button>
-  <button class="tab" onclick="showTab('settings',this)">⚙️ Settings</button>
-</div>
-
-<div class="content">
-
-<!-- ═══════════════════════ BROKER TAB ═══════════════════════ -->
-<div class="page active" id="page-broker">
-  <div style="max-width:660px;margin:0 auto">
-    <h2 style="margin-bottom:6px">Setup Fyers Broker</h2>
-    <p style="color:#64748b;font-size:14px;margin-bottom:20px">Connect your Fyers account. Auth code is captured automatically — no manual copy needed.</p>
-
-    <div class="steps">
-      <div class="step active" id="s1"><div class="sc">1</div><div class="step-lbl">App Credentials</div></div>
-      <div class="step" id="s2"><div class="sc">2</div><div class="step-lbl">Login to Fyers</div></div>
-      <div class="step" id="s3"><div class="sc">3</div><div class="step-lbl">Session Active</div></div>
-    </div>
-
-    <!-- Auth banner -->
-    <div class="auth-banner ab-none" id="authBanner">
-      <span class="adot dg" id="authDot"></span>
-      <div>
-        <div style="font-weight:600;font-size:14px" id="authTitle">Not Connected</div>
-        <div style="font-size:12px;color:#64748b;margin-top:2px" id="authSub">Enter your App ID and Secret ID</div>
-      </div>
-      <div style="margin-left:auto;font-family:monospace;font-size:12px;color:#475569" id="authToken"></div>
-    </div>
-
-    <!-- Step 1: Credentials -->
-    <div class="card">
-      <div class="ct">① App Credentials</div>
-      <!-- Redirect URI options -->
-      <div style="margin-bottom:16px">
-        <div style="color:#94a3b8;font-size:12px;font-weight:600;margin-bottom:10px">REDIRECT URL — Choose one option:</div>
-        <div style="display:flex;gap:8px;margin-bottom:12px">
-          <button class="btn" id="optLocal" onclick="selectRedirectOpt('local')"
-            style="flex:1;background:#1d4ed8;font-size:13px">🖥️ Localhost (Local machine)</button>
-          <button class="btn btn-out" id="optRender" onclick="selectRedirectOpt('render')"
-            style="flex:1;font-size:13px">☁️ Render / Cloud Hosted</button>
-        </div>
-
-        <!-- Local option info -->
-        <div id="localInfo" style="background:#0c1a33;border:1px solid #1e3a5f;border-radius:8px;padding:12px;font-size:12px;color:#93c5fd;line-height:1.8">
-          In Fyers app at <a href="https://myapi.fyers.in/dashboard" target="_blank" style="color:#60a5fa">myapi.fyers.in/dashboard</a>, set Redirect URL to:<br>
-          <code style="background:#0f172a;padding:3px 8px;border-radius:4px;font-size:13px;color:#4ade80;display:inline-block;margin:4px 0">http://localhost:8765</code><br>
-          The backend listens on port 8765 and captures the auth code <b>automatically</b>.
-        </div>
-
-        <!-- Render option info -->
-        <div id="renderInfo" style="display:none;background:#0c1a33;border:1px solid #1e3a5f;border-radius:8px;padding:12px;font-size:12px;color:#93c5fd;line-height:1.8">
-          Deploy this backend to Render (free). Your public URL will be like:<br>
-          <code style="background:#0f172a;padding:3px 8px;border-radius:4px;font-size:13px;color:#4ade80;display:inline-block;margin:4px 0">https://your-app.onrender.com</code><br>
-          Set Redirect URL in Fyers to: <code style="background:#0f172a;padding:2px 6px;border-radius:4px">https://your-app.onrender.com/api/auth/callback</code>
-          <div style="margin-top:10px">
-            <label style="margin-top:0">Your Render/Hosted URL</label>
-            <input id="b_renderUrl" placeholder="https://your-app.onrender.com" oninput="updateRedirectPreview()"/>
-            <div style="margin-top:6px;color:#64748b;font-size:11px">Redirect URL to set in Fyers: <span id="redirectPreview" style="color:#4ade80">--</span></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Credentials -->
-      <div class="g2">
-        <div><label>App ID</label><input id="b_app" placeholder="e.g. XY1234-100" oninput="credsFilled()"/></div>
-        <div><label>Secret ID</label><input id="b_sec" type="password" placeholder="Your secret ID" oninput="credsFilled()"/></div>
-      </div>
-      <div id="credsMsg"></div>
-      <button class="btn bb" id="saveBtn" onclick="saveCreds()" disabled style="margin-top:14px">💾 Save Credentials</button>
-    </div>
-
-    <!-- Step 2: Login -->
-    <div class="card" id="loginCard" style="opacity:.4;pointer-events:none">
-      <div class="ct">② Login to Fyers</div>
-      <p style="color:#94a3b8;font-size:14px;margin-bottom:16px">
-        Click below to open the Fyers login page. Once you login, the auth code is captured
-        <b style="color:#4ade80">automatically</b> — no copy-paste needed.
-      </p>
-      <button class="btn btn-login" id="loginBtn" onclick="doLogin()">🔐 Login to Fyers</button>
-
-      <!-- Waiting state shown after click -->
-      <div id="waitingBox" style="display:none;margin-top:16px" class="waiting-box">
-        <div class="spin" style="width:24px;height:24px;margin:0 auto 12px"></div>
-        <div style="color:#60a5fa;font-weight:600;margin-bottom:6px">Waiting for Fyers login...</div>
-        <div style="color:#64748b;font-size:13px">Complete login in the browser window. This will update automatically.</div>
-      </div>
-      <div id="loginMsg" style="margin-top:10px"></div>
-    </div>
-
-    <!-- Step 3: Session active -->
-    <div class="card" id="sessionCard" style="display:none">
-      <div class="ct">③ Session Active ✅</div>
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
-        <div>
-          <div style="color:#4ade80;font-size:16px;font-weight:600;margin-bottom:4px">🟢 Authenticated with Fyers</div>
-          <div style="color:#64748b;font-size:13px" id="authTime"></div>
-          <div style="color:#475569;font-size:12px;margin-top:2px" id="tokenPrev"></div>
-        </div>
-        <div style="display:flex;gap:8px">
-          <button class="btn bg" onclick="goToDash()">▶ Go to Dashboard</button>
-          <button class="btn btn-out btn-sm" onclick="relogin()">🔄 Re-Login</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-<!-- ═══════════════════════ DASHBOARD TAB ═══════════════════════ -->
-<div class="page" id="page-dashboard">
-
-  <!-- Trade Mode + Index Selection -->
-  <div class="card">
-    <div class="ct">Trading Configuration</div>
-    <div class="g2" style="align-items:start;gap:24px">
-      <div>
-        <div style="color:#94a3b8;font-size:12px;margin-bottom:10px;font-weight:600">TRADE MODE</div>
-        <div class="mode-toggle">
-          <button class="mode-btn active-real" id="mReal" onclick="setMode('real')">📈 Real Trade</button>
-          <button class="mode-btn" id="mPaper" onclick="setMode('paper')">📄 Paper Trade</button>
-        </div>
-        <div id="modeInfo" style="margin-top:10px;font-size:12px;border-radius:6px;padding:8px 12px;background:#0f172a;border:1px solid #334155;line-height:1.6;color:#94a3b8">
-          <span id="modeInfoText">📈 <b style="color:#4ade80">Real Trade:</b> Live data + Orders placed to Fyers broker</span>
-        </div>
-      </div>
-      <div>
-        <div style="color:#94a3b8;font-size:12px;margin-bottom:10px;font-weight:600">INDEX SELECTION</div>
-        <div class="idx-toggle">
-          <div class="idx-btn active-nifty" id="idxNifty" onclick="toggleIndex('nifty')">
-            <div class="idx-label" style="color:#60a5fa">NIFTY 50</div>
-            <div class="idx-val" id="niftySpot" style="color:#60a5fa">--</div>
-            <div style="font-size:10px;color:#475569;margin-top:4px" id="niftyStatus">✓ Selected</div>
-          </div>
-          <div class="idx-btn" id="idxSensex" onclick="toggleIndex('sensex')">
-            <div class="idx-label" style="color:#c084fc">SENSEX</div>
-            <div class="idx-val" id="sensexSpot" style="color:#c084fc">--</div>
-            <div style="font-size:10px;color:#475569;margin-top:4px" id="sensexStatus">Click to enable</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Market Stats -->
-  <div class="g2">
-    <div class="card" style="margin:0">
-      <div class="ct">📊 NIFTY</div>
-      <div class="g2">
-        <div class="sbox"><div class="sl">ATM Strike</div><div class="sv" id="atmStrike" style="color:#f59e0b">--</div></div>
-        <div class="sbox"><div class="sl">CE LTP</div><div class="sv" id="ceLtp" style="color:#60a5fa">--</div></div>
-        <div class="sbox"><div class="sl">PE LTP</div><div class="sv" id="peLtp" style="color:#f87171">--</div></div>
-        <div class="sbox"><div class="sl">Today P&amp;L</div><div class="sv" id="dailyPnl">₹0</div></div>
-      </div>
-    </div>
-    <div class="card" style="margin:0" id="sensexCard">
-      <div class="ct">📊 SENSEX <span id="sensexDisabledBadge" style="color:#475569;text-transform:none;font-weight:400;font-size:11px">(disabled)</span></div>
-      <div class="g2">
-        <div class="sbox"><div class="sl">ATM Strike</div><div class="sv" id="sensexAtm" style="color:#f59e0b">--</div></div>
-        <div class="sbox"><div class="sl">CE LTP</div><div class="sv" id="sensexCeLtp" style="color:#60a5fa">--</div></div>
-        <div class="sbox"><div class="sl">PE LTP</div><div class="sv" id="sensexPeLtp" style="color:#f87171">--</div></div>
-        <div class="sbox"><div class="sl">Margin Used</div><div class="sv" id="usedMargin" style="color:#f59e0b">--</div></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Supertrend -->
-  <div class="card" style="margin-top:16px">
-    <div class="ct">🔮 Supertrend (10,3)</div>
-    <div class="g2">
-      <div>
-        <div style="color:#64748b;font-size:11px;text-transform:uppercase;margin-bottom:8px">CE — <span id="ceSymLbl" style="color:#60a5fa;text-transform:none">--</span></div>
-        <div id="ceST" class="stbox st-wait"><span style="color:#475569">Waiting...</span></div>
-      </div>
-      <div>
-        <div style="color:#64748b;font-size:11px;text-transform:uppercase;margin-bottom:8px">PE — <span id="peSymLbl" style="color:#f87171;text-transform:none">--</span></div>
-        <div id="peST" class="stbox st-wait"><span style="color:#475569">Waiting...</span></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Engine Controls -->
-  <div class="card">
-    <div class="ct">🚀 Trading Engine</div>
-    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-      <button class="btn bg" id="startBtn" onclick="startTrading()">▶ Start</button>
-      <button class="btn br" id="stopBtn" onclick="stopTrading()" style="display:none">⏹ Stop</button>
-      <div id="tradingMsg"></div>
-    </div>
-    <div id="activeInfo" style="display:none;margin-top:12px;padding:12px;background:#0f172a;border-radius:8px;font-size:13px;color:#94a3b8">
-      <span style="color:#4ade80;font-weight:600">● LIVE</span>
-      &nbsp;|&nbsp; NIFTY: <code id="ceSymA" style="color:#60a5fa">--</code> / <code id="peSymA" style="color:#f87171">--</code>
-      <span id="sensexActiveInfo"></span>
-    </div>
-  </div>
-
-  <!-- Margin -->
-  <div class="g2" style="margin-top:0">
-    <div class="card" style="margin:0">
-      <div class="ct">💼 Margin</div>
-      <div class="g2">
-        <div class="sbox"><div class="sl">Available</div><div class="sv" id="availMargin" style="color:#4ade80;font-size:18px">--</div></div>
-        <div class="sbox"><div class="sl">Used</div><div class="sv" id="usedMargin2" style="color:#f59e0b;font-size:18px">--</div></div>
-      </div>
-    </div>
-    <div class="card" style="margin:0">
-      <div class="ct">📈 Stats</div>
-      <div class="g2">
-        <div class="sbox"><div class="sl">Trades Today</div><div class="sv" id="dailyTrades" style="color:#c084fc">0</div></div>
-        <div class="sbox"><div class="sl">Open Positions</div><div class="sv" id="openCount" style="color:#38bdf8">0</div></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-<!-- ═══════════════════════ POSITIONS TAB ═══════════════════════ -->
-<div class="page" id="page-positions">
-  <div class="stabs">
-    <button class="stab active" onclick="showSub('open','positions',this)">Open (<span id="openCnt">0</span>)</button>
-    <button class="stab" onclick="showSub('today','positions',this)">Today (<span id="todayCnt">0</span>)</button>
-  </div>
-  <div id="sub-open"><div class="empty">No open positions</div></div>
-  <div id="sub-today" style="display:none"><div class="empty">No trades today</div></div>
-</div>
-
-
-<!-- ═══════════════════════ P&L TAB ═══════════════════════ -->
-<div class="page" id="page-pnl">
-  <div class="g4" style="margin-bottom:16px">
-    <div class="card" style="margin:0"><div class="sl">Total P&amp;L</div><div class="sv" id="totPnl" style="font-size:20px">₹0</div></div>
-    <div class="card" style="margin:0"><div class="sl">Total Trades</div><div class="sv" id="totTrades" style="font-size:20px;color:#60a5fa">0</div></div>
-    <div class="card" style="margin:0"><div class="sl">Win Rate</div><div class="sv" id="winRate" style="font-size:20px;color:#f59e0b">0%</div></div>
-    <div class="card" style="margin:0"><div class="sl">Trading Days</div><div class="sv" id="tradDays" style="font-size:20px;color:#c084fc">0</div></div>
-  </div>
-  <div style="display:flex;justify-content:space-between;margin-bottom:16px;gap:10px;flex-wrap:wrap">
-    <div class="stabs" style="margin:0">
-      <button class="stab active" onclick="showSub('chart','pnl',this)">📊 Equity</button>
-      <button class="stab" onclick="showSub('daily','pnl',this)">📅 Daily</button>
-      <button class="stab" onclick="showSub('allTrades','pnl',this)">📝 Trades</button>
-    </div>
-    <button class="btn bg btn-sm" onclick="exportCSV()">⬇ CSV</button>
-  </div>
-  <div id="sub-chart"><div class="card"><canvas id="eqChart"></canvas></div></div>
-  <div id="sub-daily" style="display:none"><div id="dailyTbl"><div class="empty">No data</div></div></div>
-  <div id="sub-allTrades" style="display:none"><div id="allTbl"><div class="empty">No trades</div></div></div>
-</div>
-
-
-<!-- ═══════════════════════ SETTINGS TAB ═══════════════════════ -->
-<div class="page" id="page-settings">
-  <div class="g2">
-    <div class="card">
-      <div class="ct">📱 Telegram</div>
-      <div style="background:#0c1a33;border:1px solid #1e3a5f;border-radius:8px;padding:10px;margin-bottom:4px;font-size:12px;color:#93c5fd;line-height:1.6">
-        Create bot via <b>@BotFather</b> · Get Chat ID from <b>@userinfobot</b>
-      </div>
-      <label>Bot Token</label><input id="tgTok" type="password" placeholder="123456:ABC..."/>
-      <label>Chat ID</label><input id="tgChat" placeholder="-100123456789"/>
-      <div id="tgMsg"></div>
-      <div style="display:flex;gap:8px;margin-top:14px">
-        <button class="btn bb" onclick="saveTg()">💾 Save</button>
-        <button class="btn btn-out" onclick="testTg()">🧪 Test</button>
-      </div>
-    </div>
-    <div class="card">
-      <div class="ct">🛡️ Risk Management</div>
-      <label>Max Daily Loss (₹)</label><input id="rLoss" type="number" value="10000"/>
-      <label>Max Trades / Day</label><input id="rTrades" type="number" value="20"/>
-      <label>Lot Size (qty)</label><input id="rLot" type="number" value="50"/>
-      <label style="margin-top:14px">Position Scaling (1X → 2X → 3X)</label>
-      <div class="trow" onclick="toggleScale()">
-        <span id="scaleLabel" style="font-size:14px">✅ Enabled</span>
-        <div class="tpill on" id="scalePill"><div class="tknob"></div></div>
-      </div>
-      <div id="riskMsg"></div>
-      <button class="btn bp" onclick="saveRisk()" style="margin-top:14px">💾 Save</button>
-    </div>
-  </div>
-</div>
-
-</div><!-- /content -->
-
-<script>
-const API = 'http://localhost:8000/api';
-let scalingOn  = true;
-let tradeMode  = 'real';
-let niftyOn    = true;
-let sensexOn   = false;
-let eqChart    = null;
-let allTrades  = [];
-let pnlHistory = [];
-
-// ── Clock ──────────────────────────────────────────────────────────────
-setInterval(()=>{ document.getElementById('clk').textContent=new Date().toLocaleString('en-IN',{hour12:false}); },1000);
-
-// ── API ────────────────────────────────────────────────────────────────
-async function api(path,method='GET',body=null){
-  const o={method,headers:{'Content-Type':'application/json'}};
-  if(body) o.body=JSON.stringify(body);
-  const r=await fetch(API+path,o);
-  const d=await r.json();
-  if(!r.ok) throw new Error(d.detail||JSON.stringify(d));
-  return d;
-}
-function msg(id,html,type='ok'){
-  const e=document.getElementById(id);
-  if(!e)return;
-  e.innerHTML=`<div class="msg m${type}">${html}</div>`;
-  if(type!=='inf') setTimeout(()=>e.innerHTML='',5000);
-}
-function set(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}
-
-// ── Tabs ───────────────────────────────────────────────────────────────
-function showTab(name,btn){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.getElementById('page-'+name).classList.add('active');
-  if(btn)btn.classList.add('active');
-  if(name==='pnl')loadPnL();
-  if(name==='positions')loadPos();
-  if(name==='broker')checkAuth();
-}
-function goToDash(){
-  document.querySelectorAll('.tab').forEach((t,i)=>{if(i===1)t.classList.add('active');else t.classList.remove('active');});
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById('page-dashboard').classList.add('active');
-}
-
-function showSub(name,group,btn){
-  const grps={positions:['open','today'],pnl:['chart','daily','allTrades']};
-  const pg=document.getElementById('page-'+group);
-  pg.querySelectorAll('.stab').forEach(t=>t.classList.remove('active'));
-  if(btn)btn.classList.add('active');
-  grps[group].forEach(s=>{
-    const el=document.getElementById('sub-'+s);
-    if(el)el.style.display=s===name?'block':'none';
-  });
-}
-
-// ══════════════════════════════════════════════════════════════════════
-// BROKER AUTH — FULLY AUTOMATIC
-// ══════════════════════════════════════════════════════════════════════
-function credsFilled(){
-  const ok=document.getElementById('b_app').value.trim()&&document.getElementById('b_sec').value.trim();
-  document.getElementById('saveBtn').disabled=!ok;
-}
-
-let redirectOpt = 'local';
-function selectRedirectOpt(opt){
-  redirectOpt = opt;
-  document.getElementById('optLocal').className = 'btn'+(opt==='local'?' bb':' btn-out');
-  document.getElementById('optRender').className = 'btn'+(opt==='render'?' bb':' btn-out');
-  document.getElementById('localInfo').style.display  = opt==='local'  ? 'block' : 'none';
-  document.getElementById('renderInfo').style.display = opt==='render' ? 'block' : 'none';
-}
-
-function updateRedirectPreview(){
-  const base = document.getElementById('b_renderUrl').value.trim().replace(/\/+$/,'');
-  document.getElementById('redirectPreview').textContent = base ? base+'/api/auth/callback' : '--';
-}
-
-async function saveCreds(){
-  const app_id=document.getElementById('b_app').value.trim();
-  const secret_id=document.getElementById('b_sec').value.trim();
-  try{
-    await api('/auth/save-broker','POST',{app_id,secret_id});
-    msg('credsMsg','✅ Saved! You can now login.','ok');
-    enableLogin();
-    checkAuth();
-  }catch(e){msg('credsMsg','❌ '+e.message,'err');}
-}
-
-function enableLogin(){
-  const c=document.getElementById('loginCard');
-  c.style.opacity='1';c.style.pointerEvents='auto';
-}
-
-async function doLogin(){
-  try{
-    // 1. Tell backend to start local callback server and get auth URL
-    const d=await api('/auth/initiate-login','POST');
-    
-    // 2. Open Fyers login in new window
-    const popup=window.open(d.login_url,'FyersLogin','width=600,height=700,scrollbars=yes');
-    
-    // 3. Show waiting state
-    document.getElementById('waitingBox').style.display='block';
-    document.getElementById('loginBtn').style.display='none';
-    msg('loginMsg','','inf');
-
-    // 4. Poll auth status — backend captures code automatically
-    let polls=0;
-    const poll=setInterval(async()=>{
-      polls++;
-      try{
-        const s=await api('/auth/status');
-        if(s.has_token){
-          clearInterval(poll);
-          document.getElementById('waitingBox').style.display='none';
-          document.getElementById('loginBtn').style.display='inline-flex';
-          msg('loginMsg','✅ Login successful! Session created automatically.','ok');
-          try{popup&&popup.close();}catch(e){}
-          await checkAuth();
-        } else if(s.status==='token_exchange_failed'){
-          clearInterval(poll);
-          document.getElementById('waitingBox').style.display='none';
-          document.getElementById('loginBtn').style.display='inline-flex';
-          msg('loginMsg','❌ Token exchange failed. Try again.','err');
-        }
-      }catch(e){}
-      if(polls>90){ // 3 min timeout
-        clearInterval(poll);
-        document.getElementById('waitingBox').style.display='none';
-        document.getElementById('loginBtn').style.display='inline-flex';
-        msg('loginMsg','⏱ Timed out. Please try again.','err');
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>NIFTY Options Bot</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
       }
-    },2000);
+      body {
+        background: #0a0e1a;
+        color: #e2e8f0;
+        font-family: 'Segoe UI', sans-serif;
+        min-height: 100vh;
+      }
+      .header {
+        background: linear-gradient(135deg, #1a1f35, #0f172a);
+        border-bottom: 1px solid #1e293b;
+        padding: 12px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .logo {
+        font-size: 20px;
+        font-weight: 700;
+        color: #60a5fa;
+      }
+      .hright {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .status-badge {
+        padding: 4px 14px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .live {
+        background: #00ff88;
+        color: #000;
+      }
+      .stopped {
+        background: #374151;
+        color: #9ca3af;
+      }
+      .mode-pill {
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+      }
+      .mode-real {
+        background: #7c3aed;
+        color: #fff;
+      }
+      .mode-paper {
+        background: #d97706;
+        color: #000;
+      }
+      .clock {
+        color: #475569;
+        font-size: 12px;
+        font-family: monospace;
+      }
+      .tabs {
+        display: flex;
+        background: #0f172a;
+        border-bottom: 1px solid #1e293b;
+        padding: 0 16px;
+        gap: 4px;
+      }
+      .tab {
+        background: none;
+        border: none;
+        color: #64748b;
+        padding: 13px 18px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        border-bottom: 3px solid transparent;
+        transition: all 0.2s;
+      }
+      .tab:hover {
+        color: #94a3b8;
+      }
+      .tab.active {
+        color: #60a5fa;
+        border-bottom: 3px solid #60a5fa;
+      }
+      .content {
+        padding: 24px;
+      }
+      .page {
+        display: none;
+      }
+      .page.active {
+        display: block;
+      }
+      .g2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+      .g3 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 16px;
+      }
+      .g4 {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+      }
+      .card {
+        background: #1e293b;
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid #334155;
+        margin-bottom: 16px;
+      }
+      .ct {
+        color: #94a3b8;
+        font-size: 11px;
+        font-weight: 600;
+        margin-bottom: 16px;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+      }
+      .sbox {
+        background: #0f172a;
+        border-radius: 8px;
+        padding: 12px 16px;
+      }
+      .sl {
+        font-size: 11px;
+        color: #64748b;
+        margin-bottom: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+      }
+      .sv {
+        font-size: 22px;
+        font-weight: 700;
+        font-family: monospace;
+      }
+      /* Supertrend */
+      .stbox {
+        border-radius: 8px;
+        padding: 14px 16px;
+        transition: all 0.3s;
+      }
+      .st-bull {
+        background: #052e16;
+        border: 1px solid #16a34a;
+      }
+      .st-bear {
+        background: #2d0000;
+        border: 1px solid #dc2626;
+      }
+      .st-wait {
+        background: #1e293b;
+        border: 1px solid #334155;
+      }
+      /* Auth */
+      .auth-banner {
+        border-radius: 10px;
+        padding: 14px 18px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+      .ab-ok {
+        background: #052e16;
+        border: 1px solid #16a34a;
+      }
+      .ab-pend {
+        background: #1c1400;
+        border: 1px solid #d97706;
+      }
+      .ab-none {
+        background: #1e293b;
+        border: 1px solid #334155;
+      }
+      .adot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+      .dg {
+        background: #64748b;
+      }
+      .dy {
+        background: #fbbf24;
+      }
+      .dgreen {
+        background: #4ade80;
+      }
+      /* Steps */
+      .steps {
+        display: flex;
+        margin-bottom: 24px;
+      }
+      .step {
+        flex: 1;
+        text-align: center;
+        position: relative;
+      }
+      .step:not(:last-child)::after {
+        content: '';
+        position: absolute;
+        top: 15px;
+        left: 60%;
+        width: 80%;
+        height: 2px;
+        background: #1e293b;
+        z-index: 0;
+      }
+      .step.done::after {
+        background: #16a34a;
+      }
+      .sc {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 8px;
+        font-size: 12px;
+        font-weight: 700;
+        position: relative;
+        z-index: 1;
+        border: 2px solid #334155;
+        background: #0f172a;
+        color: #64748b;
+      }
+      .step.done .sc {
+        background: #052e16;
+        border-color: #16a34a;
+        color: #4ade80;
+      }
+      .step.active .sc {
+        background: #1d4ed8;
+        border-color: #3b82f6;
+        color: #fff;
+      }
+      .step-lbl {
+        font-size: 11px;
+        color: #64748b;
+      }
+      .step.done .step-lbl {
+        color: #4ade80;
+      }
+      .step.active .step-lbl {
+        color: #60a5fa;
+      }
+      /* Spinner */
+      .spin {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid #334155;
+        border-top-color: #60a5fa;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        vertical-align: middle;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      /* Forms */
+      label {
+        display: block;
+        color: #94a3b8;
+        font-size: 12px;
+        margin-bottom: 6px;
+        margin-top: 14px;
+        font-weight: 500;
+      }
+      label:first-child {
+        margin-top: 0;
+      }
+      input,
+      select {
+        width: 100%;
+        background: #0f172a;
+        border: 1px solid #334155;
+        border-radius: 8px;
+        padding: 10px 12px;
+        color: #e2e8f0;
+        font-size: 14px;
+        outline: none;
+        transition: border 0.2s;
+      }
+      input:focus,
+      select:focus {
+        border-color: #60a5fa;
+      }
+      input::placeholder {
+        color: #475569;
+      }
+      /* Buttons */
+      .btn {
+        border: none;
+        border-radius: 8px;
+        padding: 10px 20px;
+        color: #fff;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .btn:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+      }
+      .btn:active {
+        transform: none;
+      }
+      .btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        transform: none;
+      }
+      .bg {
+        background: #16a34a;
+      }
+      .br {
+        background: #dc2626;
+      }
+      .bb {
+        background: #1d4ed8;
+      }
+      .bp {
+        background: #7c3aed;
+      }
+      .by {
+        background: #d97706;
+      }
+      .bgr {
+        background: #374151;
+      }
+      .btn-sm {
+        padding: 6px 14px;
+        font-size: 12px;
+      }
+      .btn-out {
+        background: transparent;
+        border: 1px solid #334155;
+        color: #94a3b8;
+      }
+      .btn-out:hover {
+        border-color: #60a5fa;
+        color: #60a5fa;
+      }
+      .btn-login {
+        background: linear-gradient(135deg, #1d4ed8, #7c3aed);
+        padding: 14px 32px;
+        font-size: 15px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(29, 78, 216, 0.3);
+      }
+      /* Toggle switch */
+      .trow {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #0f172a;
+        border: 1px solid #334155;
+        border-radius: 8px;
+        padding: 10px 14px;
+        cursor: pointer;
+      }
+      .trow:hover {
+        border-color: #475569;
+      }
+      .tpill {
+        width: 42px;
+        height: 24px;
+        border-radius: 12px;
+        position: relative;
+        transition: background 0.2s;
+        flex-shrink: 0;
+      }
+      .tpill.on {
+        background: #16a34a;
+      }
+      .tpill.off {
+        background: #374151;
+      }
+      .tknob {
+        width: 20px;
+        height: 20px;
+        background: #fff;
+        border-radius: 50%;
+        position: absolute;
+        top: 2px;
+        transition: left 0.2s;
+      }
+      .tpill.on .tknob {
+        left: 20px;
+      }
+      .tpill.off .tknob {
+        left: 2px;
+      }
+      /* Mode toggle */
+      .mode-toggle {
+        display: flex;
+        background: #0f172a;
+        border: 1px solid #334155;
+        border-radius: 10px;
+        padding: 4px;
+        gap: 4px;
+      }
+      .mode-btn {
+        flex: 1;
+        border: none;
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: #64748b;
+        background: transparent;
+      }
+      .mode-btn.active-real {
+        background: #7c3aed;
+        color: #fff;
+      }
+      .mode-btn.active-paper {
+        background: #d97706;
+        color: #000;
+      }
+      /* Index toggles */
+      .idx-toggle {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+      .idx-btn {
+        flex: 1;
+        border: 2px solid #334155;
+        border-radius: 10px;
+        padding: 12px;
+        cursor: pointer;
+        background: #0f172a;
+        text-align: center;
+        transition: all 0.2s;
+      }
+      .idx-btn:hover {
+        border-color: #475569;
+      }
+      .idx-btn.active-nifty {
+        border-color: #60a5fa;
+        background: #0c1a33;
+      }
+      .idx-btn.active-sensex {
+        border-color: #c084fc;
+        background: #1a0a33;
+      }
+      .idx-label {
+        font-size: 12px;
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .idx-val {
+        font-size: 18px;
+        font-weight: 700;
+        font-family: monospace;
+      }
+      /* Tables */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #1e293b;
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      th {
+        padding: 11px 14px;
+        text-align: left;
+        font-size: 11px;
+        color: #64748b;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        background: #0f172a;
+        white-space: nowrap;
+      }
+      td {
+        padding: 11px 14px;
+        font-size: 13px;
+        border-bottom: 1px solid #0f172a;
+      }
+      tr:last-child td {
+        border: none;
+      }
+      tr:hover td {
+        background: rgba(255, 255, 255, 0.02);
+      }
+      .bdg {
+        padding: 2px 7px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+      }
+      .bce {
+        background: #1e3a5f;
+        color: #60a5fa;
+      }
+      .bpe {
+        background: #3d1a1a;
+        color: #f87171;
+      }
+      .bop {
+        background: #052e16;
+        color: #4ade80;
+      }
+      .bcl {
+        background: #1e293b;
+        color: #94a3b8;
+        border: 1px solid #334155;
+      }
+      .bpaper {
+        background: #1c1400;
+        color: #fbbf24;
+        border: 1px solid #92400e;
+      }
+      .pp {
+        color: #4ade80;
+        font-weight: 600;
+      }
+      .pn {
+        color: #f87171;
+        font-weight: 600;
+      }
+      /* Messages */
+      .msg {
+        padding: 10px 14px;
+        border-radius: 8px;
+        font-size: 13px;
+        margin: 10px 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .mok {
+        background: #052e16;
+        color: #4ade80;
+        border: 1px solid #166534;
+      }
+      .merr {
+        background: #2d0000;
+        color: #f87171;
+        border: 1px solid #7f1d1d;
+      }
+      .minf {
+        background: #0c1a33;
+        color: #60a5fa;
+        border: 1px solid #1e3a5f;
+      }
+      /* Sub tabs */
+      .stabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 16px;
+      }
+      .stab {
+        border: 1px solid #334155;
+        background: #1e293b;
+        color: #64748b;
+        padding: 7px 14px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.2s;
+      }
+      .stab:hover {
+        color: #94a3b8;
+      }
+      .stab.active {
+        background: #1d4ed8;
+        color: #fff;
+        border-color: #1d4ed8;
+      }
+      .empty {
+        text-align: center;
+        padding: 60px 20px;
+        color: #475569;
+      }
+      .divider {
+        height: 1px;
+        background: #1e293b;
+        margin: 16px 0;
+      }
+      /* Login waiting animation */
+      .waiting-box {
+        text-align: center;
+        padding: 24px;
+        background: #0c1a33;
+        border: 1px solid #1e3a5f;
+        border-radius: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <div style="display: flex; align-items: center; gap: 14px">
+        <span class="logo">⚡ Options Bot</span>
+        <span class="status-badge stopped" id="statusBadge">🔴 STOPPED</span>
+        <span class="mode-pill mode-paper" id="modePill" style="display: none"
+          >PAPER</span
+        >
+      </div>
+      <div class="hright">
+        <span class="clock" id="clk"></span>
+      </div>
+    </div>
 
-  }catch(e){
-    msg('loginMsg','❌ '+e.message,'err');
-  }
-}
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('broker', this)">
+        🔌 Broker
+      </button>
+      <button class="tab" onclick="showTab('dashboard', this)">
+        📊 Dashboard
+      </button>
+      <button class="tab" onclick="showTab('positions', this)">
+        📋 Positions
+      </button>
+      <button class="tab" onclick="showTab('pnl', this)">💰 P&amp;L</button>
+      <button class="tab" onclick="showTab('settings', this)">
+        ⚙️ Settings
+      </button>
+    </div>
 
-async function relogin(){
-  await api('/auth/logout','POST');
-  document.getElementById('sessionCard').style.display='none';
-  document.getElementById('loginCard').style.display='block';
-  document.getElementById('loginCard').style.opacity='1';
-  document.getElementById('loginCard').style.pointerEvents='auto';
-  checkAuth();
-}
+    <div class="content">
+      <!-- ═══════════════════════ BROKER TAB ═══════════════════════ -->
+      <div class="page active" id="page-broker">
+        <div style="max-width: 660px; margin: 0 auto">
+          <h2 style="margin-bottom: 6px">Setup Fyers Broker</h2>
+          <p style="color: #64748b; font-size: 14px; margin-bottom: 20px">
+            Connect your Fyers account. Auth code is captured automatically — no
+            manual copy needed.
+          </p>
 
-async function checkAuth(){
-  try{
-    const d=await api('/auth/status');
-    const banner=document.getElementById('authBanner');
-    if(d.app_id) document.getElementById('b_app').value=d.app_id;
-    if(d.redirect_uri && d.redirect_uri.includes('localhost')){
-      selectRedirectOpt('local');
-    } else if(d.redirect_uri && !d.redirect_uri.includes('localhost')){
-      selectRedirectOpt('render');
-      const base = d.redirect_uri.replace('/api/auth/callback','');
-      const el = document.getElementById('b_renderUrl');
-      if(el) el.value = base;
-      updateRedirectPreview();
-    }
+          <div class="steps">
+            <div class="step active" id="s1">
+              <div class="sc">1</div>
+              <div class="step-lbl">App Credentials</div>
+            </div>
+            <div class="step" id="s2">
+              <div class="sc">2</div>
+              <div class="step-lbl">Login to Fyers</div>
+            </div>
+            <div class="step" id="s3">
+              <div class="sc">3</div>
+              <div class="step-lbl">Session Active</div>
+            </div>
+          </div>
 
-    // Steps
-    stepDone(1,d.has_credentials);
-    stepDone(2,d.has_token);
-    stepDone(3,d.has_token);
+          <!-- Auth banner -->
+          <div class="auth-banner ab-none" id="authBanner">
+            <span class="adot dg" id="authDot"></span>
+            <div>
+              <div style="font-weight: 600; font-size: 14px" id="authTitle">
+                Not Connected
+              </div>
+              <div
+                style="font-size: 12px; color: #64748b; margin-top: 2px"
+                id="authSub"
+              >
+                Enter your App ID and Secret ID
+              </div>
+            </div>
+            <div
+              style="
+                margin-left: auto;
+                font-family: monospace;
+                font-size: 12px;
+                color: #475569;
+              "
+              id="authToken"
+            ></div>
+          </div>
 
-    if(d.has_token){
-      banner.className='auth-banner ab-ok';
-      document.getElementById('authDot').className='adot dgreen';
-      document.getElementById('authTitle').textContent='🟢 Connected to Fyers';
-      document.getElementById('authSub').textContent=d.auth_time?'Authenticated at '+new Date(d.auth_time).toLocaleTimeString('en-IN'):'Session active';
-      document.getElementById('authToken').textContent=d.token_preview||'';
-      document.getElementById('loginCard').style.display='none';
-      document.getElementById('sessionCard').style.display='block';
-      document.getElementById('authTime').textContent=d.auth_time?'Logged in: '+new Date(d.auth_time).toLocaleString('en-IN'):'';
-      document.getElementById('tokenPrev').textContent=d.token_preview?'Token: '+d.token_preview:'';
-    } else if(d.has_credentials){
-      banner.className='auth-banner ab-pend';
-      document.getElementById('authDot').className='adot dy';
-      document.getElementById('authTitle').textContent='⚠️ Login Required';
-      document.getElementById('authSub').textContent='Credentials saved. Click Login to Fyers.';
-      enableLogin();
-      document.getElementById('loginCard').style.display='block';
-      document.getElementById('sessionCard').style.display='none';
-    } else {
-      banner.className='auth-banner ab-none';
-      document.getElementById('authDot').className='adot dg';
-      document.getElementById('authTitle').textContent='Not Connected';
-      document.getElementById('authSub').textContent='Enter your App ID and Secret ID';
-      document.getElementById('sessionCard').style.display='none';
-    }
-  }catch(e){}
-}
+          <!-- Step 1: Credentials -->
+          <div class="card">
+            <div class="ct">① App Credentials</div>
+            <!-- Redirect URI options -->
+            <div style="margin-bottom: 16px">
+              <div
+                style="
+                  color: #94a3b8;
+                  font-size: 12px;
+                  font-weight: 600;
+                  margin-bottom: 10px;
+                "
+              >
+                REDIRECT URL — Choose one option:
+              </div>
+              <div style="display: flex; gap: 8px; margin-bottom: 12px">
+                <button
+                  class="btn"
+                  id="optLocal"
+                  onclick="selectRedirectOpt('local')"
+                  style="flex: 1; background: #1d4ed8; font-size: 13px"
+                >
+                  🖥️ Localhost (Local machine)
+                </button>
+                <button
+                  class="btn btn-out"
+                  id="optRender"
+                  onclick="selectRedirectOpt('render')"
+                  style="flex: 1; font-size: 13px"
+                >
+                  ☁️ Render / Cloud Hosted
+                </button>
+              </div>
 
-function stepDone(n,done){
-  const el=document.getElementById('s'+n);
-  if(!el)return;
-  el.className='step'+(done?' done':n===1?' active':'');
-}
+              <!-- Local option info -->
+              <div
+                id="localInfo"
+                style="
+                  background: #0c1a33;
+                  border: 1px solid #1e3a5f;
+                  border-radius: 8px;
+                  padding: 12px;
+                  font-size: 12px;
+                  color: #93c5fd;
+                  line-height: 1.8;
+                "
+              >
+                In Fyers app at
+                <a
+                  href="https://myapi.fyers.in/dashboard"
+                  target="_blank"
+                  style="color: #60a5fa"
+                  >myapi.fyers.in/dashboard</a
+                >, set Redirect URL to:<br />
+                <code
+                  style="
+                    background: #0f172a;
+                    padding: 3px 8px;
+                    border-radius: 4px;
+                    font-size: 13px;
+                    color: #4ade80;
+                    display: inline-block;
+                    margin: 4px 0;
+                  "
+                  >http://localhost:8765</code
+                ><br />
+                The backend listens on port 8765 and captures the auth code
+                <b>automatically</b>.
+              </div>
 
-// ══════════════════════════════════════════════════════════════════════
-// DASHBOARD
-// ══════════════════════════════════════════════════════════════════════
-function setMode(m){
-  tradeMode=m;
-  document.getElementById('mReal').className='mode-btn'+(m==='real'?' active-real':'');
-  document.getElementById('mPaper').className='mode-btn'+(m==='paper'?' active-paper':'');
-  const infoEl = document.getElementById('modeInfoText');
-  if(m==='real'){
-    infoEl.innerHTML='📈 <b style="color:#4ade80">Real Trade:</b> Live Fyers data + Orders placed to Fyers broker';
-  } else {
-    infoEl.innerHTML='📄 <b style="color:#fbbf24">Paper Trade:</b> SAME live Fyers data feed. Strategy runs identically. Only difference: orders are <b>NOT sent to broker</b> — simulated locally with real prices.';
-  }
-  const pill=document.getElementById('modePill');
-  pill.textContent=m==='paper'?'PAPER':'LIVE';
-  pill.className='mode-pill mode-'+(m==='paper'?'paper':'real');
-}
+              <!-- Render option info -->
+              <div
+                id="renderInfo"
+                style="
+                  display: none;
+                  background: #0c1a33;
+                  border: 1px solid #1e3a5f;
+                  border-radius: 8px;
+                  padding: 12px;
+                  font-size: 12px;
+                  color: #93c5fd;
+                  line-height: 1.8;
+                "
+              >
+                Deploy this backend to Render (free). Your public URL will be
+                like:<br />
+                <code
+                  style="
+                    background: #0f172a;
+                    padding: 3px 8px;
+                    border-radius: 4px;
+                    font-size: 13px;
+                    color: #4ade80;
+                    display: inline-block;
+                    margin: 4px 0;
+                  "
+                  >https://your-app.onrender.com</code
+                ><br />
+                Set Redirect URL in Fyers to:
+                <code
+                  style="
+                    background: #0f172a;
+                    padding: 2px 6px;
+                    border-radius: 4px;
+                  "
+                  >https://your-app.onrender.com/api/auth/callback</code
+                >
+                <div style="margin-top: 10px">
+                  <label style="margin-top: 0">Your Render/Hosted URL</label>
+                  <input
+                    id="b_renderUrl"
+                    placeholder="https://your-app.onrender.com"
+                    oninput="updateRedirectPreview()"
+                  />
+                  <div style="margin-top: 6px; color: #64748b; font-size: 11px">
+                    Redirect URL to set in Fyers:
+                    <span id="redirectPreview" style="color: #4ade80">--</span>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-function toggleIndex(idx){
-  if(idx==='nifty'){
-    niftyOn=!niftyOn;
-    const el=document.getElementById('idxNifty');
-    el.className='idx-btn'+(niftyOn?' active-nifty':'');
-    document.getElementById('niftyStatus').textContent=niftyOn?'✓ Selected':'Click to enable';
-  } else {
-    sensexOn=!sensexOn;
-    const el=document.getElementById('idxSensex');
-    el.className='idx-btn'+(sensexOn?' active-sensex':'');
-    document.getElementById('sensexStatus').textContent=sensexOn?'✓ Selected':'Click to enable';
-    document.getElementById('sensexDisabledBadge').textContent=sensexOn?'(active)':'(disabled)';
-  }
-}
+            <!-- Credentials -->
+            <div class="g2">
+              <div>
+                <label>App ID</label
+                ><input
+                  id="b_app"
+                  placeholder="e.g. XY1234-100"
+                  oninput="credsFilled()"
+                />
+              </div>
+              <div>
+                <label>Secret ID</label
+                ><input
+                  id="b_sec"
+                  type="password"
+                  placeholder="Your secret ID"
+                  oninput="credsFilled()"
+                />
+              </div>
+            </div>
+            <div id="credsMsg"></div>
+            <button
+              class="btn bb"
+              id="saveBtn"
+              onclick="saveCreds()"
+              disabled
+              style="margin-top: 14px"
+            >
+              💾 Save Credentials
+            </button>
+          </div>
 
-async function pollDash(){
-  try{
-    const d=await api('/dashboard');
-    const running=d.is_running;
+          <!-- Step 2: Login -->
+          <div
+            class="card"
+            id="loginCard"
+            style="opacity: 0.4; pointer-events: none"
+          >
+            <div class="ct">② Login to Fyers</div>
+            <p style="color: #94a3b8; font-size: 14px; margin-bottom: 16px">
+              Click below to open the Fyers login page. Once you login, the auth
+              code is captured
+              <b style="color: #4ade80">automatically</b> — no copy-paste
+              needed.
+            </p>
+            <button class="btn btn-login" id="loginBtn" onclick="doLogin()">
+              🔐 Login to Fyers
+            </button>
 
-    // Header
-    const badge=document.getElementById('statusBadge');
-    badge.className='status-badge '+(running?'live':'stopped');
-    badge.textContent=running?'🟢 LIVE':'🔴 STOPPED';
-    const pill=document.getElementById('modePill');
-    if(running){
-      pill.style.display='inline';
-      pill.textContent=d.trade_mode==='paper'?'PAPER':'REAL';
-      pill.className='mode-pill mode-'+(d.trade_mode==='paper'?'paper':'real');
-    } else { pill.style.display='none'; }
+            <!-- Waiting state shown after click -->
+            <div
+              id="waitingBox"
+              style="display: none; margin-top: 16px"
+              class="waiting-box"
+            >
+              <div
+                class="spin"
+                style="width: 24px; height: 24px; margin: 0 auto 12px"
+              ></div>
+              <div style="color: #60a5fa; font-weight: 600; margin-bottom: 6px">
+                Waiting for Fyers login...
+              </div>
+              <div style="color: #64748b; font-size: 13px">
+                Complete login in the browser window. This will update
+                automatically.
+              </div>
+            </div>
+            <div id="loginMsg" style="margin-top: 10px"></div>
+          </div>
 
-    // Controls
-    document.getElementById('startBtn').style.display=running?'none':'inline-flex';
-    document.getElementById('stopBtn').style.display=running?'inline-flex':'none';
-    document.getElementById('activeInfo').style.display=running?'block':'none';
+          <!-- Step 3: Session active -->
+          <div class="card" id="sessionCard" style="display: none">
+            <div class="ct">③ Session Active ✅</div>
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                flex-wrap: wrap;
+                gap: 12px;
+              "
+            >
+              <div>
+                <div
+                  style="
+                    color: #4ade80;
+                    font-size: 16px;
+                    font-weight: 600;
+                    margin-bottom: 4px;
+                  "
+                >
+                  🟢 Authenticated with Fyers
+                </div>
+                <div
+                  style="color: #64748b; font-size: 13px"
+                  id="authTime"
+                ></div>
+                <div
+                  style="color: #475569; font-size: 12px; margin-top: 2px"
+                  id="tokenPrev"
+                ></div>
+              </div>
+              <div style="display: flex; gap: 8px">
+                <button class="btn bg" onclick="goToDash()">
+                  ▶ Go to Dashboard
+                </button>
+                <button class="btn btn-out btn-sm" onclick="relogin()">
+                  🔄 Re-Login
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-    if(running){
-      set('ceSymA', d.ce_symbol||'--');
-      set('peSymA', d.pe_symbol||'--');
-      set('ceSymLbl', d.ce_symbol||'--');
-      set('peSymLbl', d.pe_symbol||'--');
-      const si=document.getElementById('sensexActiveInfo');
-      if(d.sensex_enabled)
-        si.innerHTML=` &nbsp;|&nbsp; SENSEX: <code style="color:#60a5fa">${d.sensex_ce_symbol||'--'}</code> / <code style="color:#f87171">${d.sensex_pe_symbol||'--'}</code>`;
-      else si.innerHTML='';
-    }
+      <!-- ═══════════════════════ DASHBOARD TAB ═══════════════════════ -->
+      <div class="page" id="page-dashboard">
+        <!-- Trade Mode + Index Selection -->
+        <div class="card">
+          <div class="ct">Trading Configuration</div>
+          <div class="g2" style="align-items: start; gap: 24px">
+            <div>
+              <div
+                style="
+                  color: #94a3b8;
+                  font-size: 12px;
+                  margin-bottom: 10px;
+                  font-weight: 600;
+                "
+              >
+                TRADE MODE
+              </div>
+              <div class="mode-toggle">
+                <button
+                  class="mode-btn active-real"
+                  id="mReal"
+                  onclick="setMode('real')"
+                >
+                  📈 Real Trade
+                </button>
+                <button class="mode-btn" id="mPaper" onclick="setMode('paper')">
+                  📄 Paper Trade
+                </button>
+              </div>
+              <div
+                id="modeInfo"
+                style="
+                  margin-top: 10px;
+                  font-size: 12px;
+                  border-radius: 6px;
+                  padding: 8px 12px;
+                  background: #0f172a;
+                  border: 1px solid #334155;
+                  line-height: 1.6;
+                  color: #94a3b8;
+                "
+              >
+                <span id="modeInfoText"
+                  >📈 <b style="color: #4ade80">Real Trade:</b> Live data +
+                  Orders placed to Fyers broker</span
+                >
+              </div>
+            </div>
+            <div>
+              <div
+                style="
+                  color: #94a3b8;
+                  font-size: 12px;
+                  margin-bottom: 10px;
+                  font-weight: 600;
+                "
+              >
+                INDEX SELECTION
+              </div>
+              <div class="idx-toggle">
+                <div
+                  class="idx-btn active-nifty"
+                  id="idxNifty"
+                  onclick="toggleIndex('nifty')"
+                >
+                  <div class="idx-label" style="color: #60a5fa">NIFTY 50</div>
+                  <div class="idx-val" id="niftySpot" style="color: #60a5fa">
+                    --
+                  </div>
+                  <div
+                    style="font-size: 10px; color: #475569; margin-top: 4px"
+                    id="niftyStatus"
+                  >
+                    ✓ Selected
+                  </div>
+                </div>
+                <div
+                  class="idx-btn"
+                  id="idxSensex"
+                  onclick="toggleIndex('sensex')"
+                >
+                  <div class="idx-label" style="color: #c084fc">SENSEX</div>
+                  <div class="idx-val" id="sensexSpot" style="color: #c084fc">
+                    --
+                  </div>
+                  <div
+                    style="font-size: 10px; color: #475569; margin-top: 4px"
+                    id="sensexStatus"
+                  >
+                    Click to enable
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-    // Market
-    set('niftySpot',  d.nifty_spot  ? num(d.nifty_spot)  : '--');
-    set('sensexSpot', d.sensex_spot ? num(d.sensex_spot) : '--');
-    set('atmStrike',  d.atm_strike  || '--');
-    set('sensexAtm',  d.sensex_atm  || '--');
-    set('ceLtp',      d.ce_ltp      ? '₹'+d.ce_ltp.toFixed(2) : '--');
-    set('peLtp',      d.pe_ltp      ? '₹'+d.pe_ltp.toFixed(2) : '--');
-    set('sensexCeLtp',d.sensex_ce_ltp ? '₹'+d.sensex_ce_ltp.toFixed(2) : '--');
-    set('sensexPeLtp',d.sensex_pe_ltp ? '₹'+d.sensex_pe_ltp.toFixed(2) : '--');
-    set('dailyTrades', d.daily_trades||0);
-    set('openCount',   d.open_positions_count||0);
-    set('openCnt',     d.open_positions_count||0);
+        <!-- Market Stats -->
+        <div class="g2">
+          <div class="card" style="margin: 0">
+            <div class="ct">📊 NIFTY</div>
+            <div class="g2">
+              <div class="sbox">
+                <div class="sl">ATM Strike</div>
+                <div class="sv" id="atmStrike" style="color: #f59e0b">--</div>
+              </div>
+              <div class="sbox">
+                <div class="sl">CE LTP</div>
+                <div class="sv" id="ceLtp" style="color: #60a5fa">--</div>
+              </div>
+              <div class="sbox">
+                <div class="sl">PE LTP</div>
+                <div class="sv" id="peLtp" style="color: #f87171">--</div>
+              </div>
+              <div class="sbox">
+                <div class="sl">Today P&amp;L</div>
+                <div class="sv" id="dailyPnl">₹0</div>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="margin: 0" id="sensexCard">
+            <div class="ct">
+              📊 SENSEX
+              <span
+                id="sensexDisabledBadge"
+                style="
+                  color: #475569;
+                  text-transform: none;
+                  font-weight: 400;
+                  font-size: 11px;
+                "
+                >(disabled)</span
+              >
+            </div>
+            <div class="g2">
+              <div class="sbox">
+                <div class="sl">ATM Strike</div>
+                <div class="sv" id="sensexAtm" style="color: #f59e0b">--</div>
+              </div>
+              <div class="sbox">
+                <div class="sl">CE LTP</div>
+                <div class="sv" id="sensexCeLtp" style="color: #60a5fa">--</div>
+              </div>
+              <div class="sbox">
+                <div class="sl">PE LTP</div>
+                <div class="sv" id="sensexPeLtp" style="color: #f87171">--</div>
+              </div>
+              <div class="sbox">
+                <div class="sl">Margin Used</div>
+                <div class="sv" id="usedMargin" style="color: #f59e0b">--</div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-    const pnl=d.daily_pnl||0;
-    const pe=document.getElementById('dailyPnl');
-    pe.textContent='₹'+pnl.toFixed(0);
-    pe.style.color=pnl>=0?'#4ade80':'#f87171';
+        <!-- Supertrend -->
+        <div class="card" style="margin-top: 16px">
+          <div class="ct">🔮 Supertrend (10,3)</div>
+          <div class="g2">
+            <div>
+              <div
+                style="
+                  color: #64748b;
+                  font-size: 11px;
+                  text-transform: uppercase;
+                  margin-bottom: 8px;
+                "
+              >
+                CE —
+                <span id="ceSymLbl" style="color: #60a5fa; text-transform: none"
+                  >--</span
+                >
+              </div>
+              <div id="ceST" class="stbox st-wait">
+                <span style="color: #475569">Waiting...</span>
+              </div>
+            </div>
+            <div>
+              <div
+                style="
+                  color: #64748b;
+                  font-size: 11px;
+                  text-transform: uppercase;
+                  margin-bottom: 8px;
+                "
+              >
+                PE —
+                <span id="peSymLbl" style="color: #f87171; text-transform: none"
+                  >--</span
+                >
+              </div>
+              <div id="peST" class="stbox st-wait">
+                <span style="color: #475569">Waiting...</span>
+              </div>
+            </div>
+          </div>
+        </div>
 
-    const avail=d.available_margin;
-    const used=d.used_margin;
-    set('availMargin', avail!=null?'₹'+num(avail):'--');
-    set('usedMargin',  used!=null?'₹'+num(used):'--');
-    set('usedMargin2', used!=null?'₹'+num(used):'--');
+        <!-- Engine Controls -->
+        <div class="card">
+          <div class="ct">🚀 Trading Engine</div>
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              gap: 12px;
+              flex-wrap: wrap;
+            "
+          >
+            <button class="btn bg" id="startBtn" onclick="startTrading()">
+              ▶ Start
+            </button>
+            <button
+              class="btn br"
+              id="stopBtn"
+              onclick="stopTrading()"
+              style="display: none"
+            >
+              ⏹ Stop
+            </button>
+            <div id="tradingMsg"></div>
+          </div>
+          <div
+            id="activeInfo"
+            style="
+              display: none;
+              margin-top: 12px;
+              padding: 12px;
+              background: #0f172a;
+              border-radius: 8px;
+              font-size: 13px;
+              color: #94a3b8;
+            "
+          >
+            <span style="color: #4ade80; font-weight: 600">● LIVE</span>
+            &nbsp;|&nbsp; NIFTY:
+            <code id="ceSymA" style="color: #60a5fa">--</code> /
+            <code id="peSymA" style="color: #f87171">--</code>
+            <span id="sensexActiveInfo"></span>
+          </div>
+        </div>
 
-    renderST('ceST', d.ce_supertrend);
-    renderST('peST', d.pe_supertrend);
-  }catch(e){}
-}
+        <!-- Margin -->
+        <div class="g2" style="margin-top: 0">
+          <div class="card" style="margin: 0">
+            <div class="ct">💼 Margin</div>
+            <div class="g2">
+              <div class="sbox">
+                <div class="sl">Available</div>
+                <div
+                  class="sv"
+                  id="availMargin"
+                  style="color: #4ade80; font-size: 18px"
+                >
+                  --
+                </div>
+              </div>
+              <div class="sbox">
+                <div class="sl">Used</div>
+                <div
+                  class="sv"
+                  id="usedMargin2"
+                  style="color: #f59e0b; font-size: 18px"
+                >
+                  --
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="margin: 0">
+            <div class="ct">📈 Stats</div>
+            <div class="g2">
+              <div class="sbox">
+                <div class="sl">Trades Today</div>
+                <div class="sv" id="dailyTrades" style="color: #c084fc">0</div>
+              </div>
+              <div class="sbox">
+                <div class="sl">Open Positions</div>
+                <div class="sv" id="openCount" style="color: #38bdf8">0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-function num(v){ return Number(v).toLocaleString('en-IN'); }
+      <!-- ═══════════════════════ POSITIONS TAB ═══════════════════════ -->
+      <div class="page" id="page-positions">
+        <div class="stabs">
+          <button
+            class="stab active"
+            onclick="showSub('open', 'positions', this)"
+          >
+            Open (<span id="openCnt">0</span>)
+          </button>
+          <button class="stab" onclick="showSub('today', 'positions', this)">
+            Today (<span id="todayCnt">0</span>)
+          </button>
+        </div>
+        <div id="sub-open"><div class="empty">No open positions</div></div>
+        <div id="sub-today" style="display: none">
+          <div class="empty">No trades today</div>
+        </div>
+      </div>
 
-function renderST(id,st){
-  const el=document.getElementById(id);
-  if(!st||st.direction==='unknown'){
-    el.className='stbox st-wait';
-    el.innerHTML='<span style="color:#475569;font-size:13px">Waiting for candle data...</span>';
-    return;
-  }
-  const bull=st.direction==='bullish';
-  el.className='stbox '+(bull?'st-bull':'st-bear');
-  el.innerHTML=`
+      <!-- ═══════════════════════ P&L TAB ═══════════════════════ -->
+      <div class="page" id="page-pnl">
+        <div class="g4" style="margin-bottom: 16px">
+          <div class="card" style="margin: 0">
+            <div class="sl">Total P&amp;L</div>
+            <div class="sv" id="totPnl" style="font-size: 20px">₹0</div>
+          </div>
+          <div class="card" style="margin: 0">
+            <div class="sl">Total Trades</div>
+            <div
+              class="sv"
+              id="totTrades"
+              style="font-size: 20px; color: #60a5fa"
+            >
+              0
+            </div>
+          </div>
+          <div class="card" style="margin: 0">
+            <div class="sl">Win Rate</div>
+            <div
+              class="sv"
+              id="winRate"
+              style="font-size: 20px; color: #f59e0b"
+            >
+              0%
+            </div>
+          </div>
+          <div class="card" style="margin: 0">
+            <div class="sl">Trading Days</div>
+            <div
+              class="sv"
+              id="tradDays"
+              style="font-size: 20px; color: #c084fc"
+            >
+              0
+            </div>
+          </div>
+        </div>
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            gap: 10px;
+            flex-wrap: wrap;
+          "
+        >
+          <div class="stabs" style="margin: 0">
+            <button class="stab active" onclick="showSub('chart', 'pnl', this)">
+              📊 Equity
+            </button>
+            <button class="stab" onclick="showSub('daily', 'pnl', this)">
+              📅 Daily
+            </button>
+            <button class="stab" onclick="showSub('allTrades', 'pnl', this)">
+              📝 Trades
+            </button>
+          </div>
+          <button class="btn bg btn-sm" onclick="exportCSV()">⬇ CSV</button>
+        </div>
+        <div id="sub-chart">
+          <div class="card"><canvas id="eqChart"></canvas></div>
+        </div>
+        <div id="sub-daily" style="display: none">
+          <div id="dailyTbl"><div class="empty">No data</div></div>
+        </div>
+        <div id="sub-allTrades" style="display: none">
+          <div id="allTbl"><div class="empty">No trades</div></div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════ SETTINGS TAB ═══════════════════════ -->
+      <div class="page" id="page-settings">
+        <div class="g2">
+          <div class="card">
+            <div class="ct">📱 Telegram</div>
+            <div
+              style="
+                background: #0c1a33;
+                border: 1px solid #1e3a5f;
+                border-radius: 8px;
+                padding: 10px;
+                margin-bottom: 4px;
+                font-size: 12px;
+                color: #93c5fd;
+                line-height: 1.6;
+              "
+            >
+              Create bot via <b>@BotFather</b> · Get Chat ID from
+              <b>@userinfobot</b>
+            </div>
+            <label>Bot Token</label
+            ><input id="tgTok" type="password" placeholder="123456:ABC..." />
+            <label>Chat ID</label
+            ><input id="tgChat" placeholder="-100123456789" />
+            <div id="tgMsg"></div>
+            <div style="display: flex; gap: 8px; margin-top: 14px">
+              <button class="btn bb" onclick="saveTg()">💾 Save</button>
+              <button class="btn btn-out" onclick="testTg()">🧪 Test</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="ct">🛡️ Risk Management</div>
+            <label>Max Daily Loss (₹)</label
+            ><input id="rLoss" type="number" value="10000" />
+            <label>Max Trades / Day</label
+            ><input id="rTrades" type="number" value="20" />
+            <label>Lot Size (qty)</label
+            ><input id="rLot" type="number" value="50" />
+            <label style="margin-top: 14px"
+              >Position Scaling (1X → 2X → 3X)</label
+            >
+            <div class="trow" onclick="toggleScale()">
+              <span id="scaleLabel" style="font-size: 14px">✅ Enabled</span>
+              <div class="tpill on" id="scalePill">
+                <div class="tknob"></div>
+              </div>
+            </div>
+            <div id="riskMsg"></div>
+            <button
+              class="btn bp"
+              onclick="saveRisk()"
+              style="margin-top: 14px"
+            >
+              💾 Save
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- /content -->
+
+    <script>
+      const API = 'https://trading-bot-duxz.onrender.com/api';
+      let scalingOn = true;
+      let tradeMode = 'real';
+      let niftyOn = true;
+      let sensexOn = false;
+      let eqChart = null;
+      let allTrades = [];
+      let pnlHistory = [];
+
+      // ── Clock ──────────────────────────────────────────────────────────────
+      setInterval(() => {
+        document.getElementById('clk').textContent = new Date().toLocaleString(
+          'en-IN',
+          { hour12: false },
+        );
+      }, 1000);
+
+      // ── API ────────────────────────────────────────────────────────────────
+      async function api(path, method = 'GET', body = null) {
+        const o = { method, headers: { 'Content-Type': 'application/json' } };
+        if (body) o.body = JSON.stringify(body);
+        const r = await fetch(API + path, o);
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.detail || JSON.stringify(d));
+        return d;
+      }
+      function msg(id, html, type = 'ok') {
+        const e = document.getElementById(id);
+        if (!e) return;
+        e.innerHTML = `<div class="msg m${type}">${html}</div>`;
+        if (type !== 'inf') setTimeout(() => (e.innerHTML = ''), 5000);
+      }
+      function set(id, v) {
+        const e = document.getElementById(id);
+        if (e) e.textContent = v;
+      }
+
+      // ── Tabs ───────────────────────────────────────────────────────────────
+      function showTab(name, btn) {
+        document
+          .querySelectorAll('.page')
+          .forEach((p) => p.classList.remove('active'));
+        document
+          .querySelectorAll('.tab')
+          .forEach((t) => t.classList.remove('active'));
+        document.getElementById('page-' + name).classList.add('active');
+        if (btn) btn.classList.add('active');
+        if (name === 'pnl') loadPnL();
+        if (name === 'positions') loadPos();
+        if (name === 'broker') checkAuth();
+      }
+      function goToDash() {
+        document.querySelectorAll('.tab').forEach((t, i) => {
+          if (i === 1) t.classList.add('active');
+          else t.classList.remove('active');
+        });
+        document
+          .querySelectorAll('.page')
+          .forEach((p) => p.classList.remove('active'));
+        document.getElementById('page-dashboard').classList.add('active');
+      }
+
+      function showSub(name, group, btn) {
+        const grps = {
+          positions: ['open', 'today'],
+          pnl: ['chart', 'daily', 'allTrades'],
+        };
+        const pg = document.getElementById('page-' + group);
+        pg.querySelectorAll('.stab').forEach((t) =>
+          t.classList.remove('active'),
+        );
+        if (btn) btn.classList.add('active');
+        grps[group].forEach((s) => {
+          const el = document.getElementById('sub-' + s);
+          if (el) el.style.display = s === name ? 'block' : 'none';
+        });
+      }
+
+      // ══════════════════════════════════════════════════════════════════════
+      // BROKER AUTH — FULLY AUTOMATIC
+      // ══════════════════════════════════════════════════════════════════════
+      function credsFilled() {
+        const ok =
+          document.getElementById('b_app').value.trim() &&
+          document.getElementById('b_sec').value.trim();
+        document.getElementById('saveBtn').disabled = !ok;
+      }
+
+      let redirectOpt = 'local';
+      function selectRedirectOpt(opt) {
+        redirectOpt = opt;
+        document.getElementById('optLocal').className =
+          'btn' + (opt === 'local' ? ' bb' : ' btn-out');
+        document.getElementById('optRender').className =
+          'btn' + (opt === 'render' ? ' bb' : ' btn-out');
+        document.getElementById('localInfo').style.display =
+          opt === 'local' ? 'block' : 'none';
+        document.getElementById('renderInfo').style.display =
+          opt === 'render' ? 'block' : 'none';
+      }
+
+      function updateRedirectPreview() {
+        const base = document
+          .getElementById('b_renderUrl')
+          .value.trim()
+          .replace(/\/+$/, '');
+        document.getElementById('redirectPreview').textContent = base
+          ? base + '/api/auth/callback'
+          : '--';
+      }
+
+      async function saveCreds() {
+        const app_id = document.getElementById('b_app').value.trim();
+        const secret_id = document.getElementById('b_sec').value.trim();
+        try {
+          await api('/auth/save-broker', 'POST', { app_id, secret_id });
+          msg('credsMsg', '✅ Saved! You can now login.', 'ok');
+          enableLogin();
+          checkAuth();
+        } catch (e) {
+          msg('credsMsg', '❌ ' + e.message, 'err');
+        }
+      }
+
+      function enableLogin() {
+        const c = document.getElementById('loginCard');
+        c.style.opacity = '1';
+        c.style.pointerEvents = 'auto';
+      }
+
+      async function doLogin() {
+        try {
+          // 1. Tell backend to start local callback server and get auth URL
+          const d = await api('/auth/initiate-login', 'POST');
+
+          // 2. Open Fyers login in new window
+          const popup = window.open(
+            d.login_url,
+            'FyersLogin',
+            'width=600,height=700,scrollbars=yes',
+          );
+
+          // 3. Show waiting state
+          document.getElementById('waitingBox').style.display = 'block';
+          document.getElementById('loginBtn').style.display = 'none';
+          msg('loginMsg', '', 'inf');
+
+          // 4. Poll auth status — backend captures code automatically
+          let polls = 0;
+          const poll = setInterval(async () => {
+            polls++;
+            try {
+              const s = await api('/auth/status');
+              if (s.has_token) {
+                clearInterval(poll);
+                document.getElementById('waitingBox').style.display = 'none';
+                document.getElementById('loginBtn').style.display =
+                  'inline-flex';
+                msg(
+                  'loginMsg',
+                  '✅ Login successful! Session created automatically.',
+                  'ok',
+                );
+                try {
+                  popup && popup.close();
+                } catch (e) {}
+                await checkAuth();
+              } else if (s.status === 'token_exchange_failed') {
+                clearInterval(poll);
+                document.getElementById('waitingBox').style.display = 'none';
+                document.getElementById('loginBtn').style.display =
+                  'inline-flex';
+                msg('loginMsg', '❌ Token exchange failed. Try again.', 'err');
+              }
+            } catch (e) {}
+            if (polls > 90) {
+              // 3 min timeout
+              clearInterval(poll);
+              document.getElementById('waitingBox').style.display = 'none';
+              document.getElementById('loginBtn').style.display = 'inline-flex';
+              msg('loginMsg', '⏱ Timed out. Please try again.', 'err');
+            }
+          }, 2000);
+        } catch (e) {
+          msg('loginMsg', '❌ ' + e.message, 'err');
+        }
+      }
+
+      async function relogin() {
+        await api('/auth/logout', 'POST');
+        document.getElementById('sessionCard').style.display = 'none';
+        document.getElementById('loginCard').style.display = 'block';
+        document.getElementById('loginCard').style.opacity = '1';
+        document.getElementById('loginCard').style.pointerEvents = 'auto';
+        checkAuth();
+      }
+
+      async function checkAuth() {
+        try {
+          const d = await api('/auth/status');
+          const banner = document.getElementById('authBanner');
+          if (d.app_id) document.getElementById('b_app').value = d.app_id;
+          if (d.redirect_uri && d.redirect_uri.includes('localhost')) {
+            selectRedirectOpt('local');
+          } else if (d.redirect_uri && !d.redirect_uri.includes('localhost')) {
+            selectRedirectOpt('render');
+            const base = d.redirect_uri.replace('/api/auth/callback', '');
+            const el = document.getElementById('b_renderUrl');
+            if (el) el.value = base;
+            updateRedirectPreview();
+          }
+
+          // Steps
+          stepDone(1, d.has_credentials);
+          stepDone(2, d.has_token);
+          stepDone(3, d.has_token);
+
+          if (d.has_token) {
+            banner.className = 'auth-banner ab-ok';
+            document.getElementById('authDot').className = 'adot dgreen';
+            document.getElementById('authTitle').textContent =
+              '🟢 Connected to Fyers';
+            document.getElementById('authSub').textContent = d.auth_time
+              ? 'Authenticated at ' +
+                new Date(d.auth_time).toLocaleTimeString('en-IN')
+              : 'Session active';
+            document.getElementById('authToken').textContent =
+              d.token_preview || '';
+            document.getElementById('loginCard').style.display = 'none';
+            document.getElementById('sessionCard').style.display = 'block';
+            document.getElementById('authTime').textContent = d.auth_time
+              ? 'Logged in: ' + new Date(d.auth_time).toLocaleString('en-IN')
+              : '';
+            document.getElementById('tokenPrev').textContent = d.token_preview
+              ? 'Token: ' + d.token_preview
+              : '';
+          } else if (d.has_credentials) {
+            banner.className = 'auth-banner ab-pend';
+            document.getElementById('authDot').className = 'adot dy';
+            document.getElementById('authTitle').textContent =
+              '⚠️ Login Required';
+            document.getElementById('authSub').textContent =
+              'Credentials saved. Click Login to Fyers.';
+            enableLogin();
+            document.getElementById('loginCard').style.display = 'block';
+            document.getElementById('sessionCard').style.display = 'none';
+          } else {
+            banner.className = 'auth-banner ab-none';
+            document.getElementById('authDot').className = 'adot dg';
+            document.getElementById('authTitle').textContent = 'Not Connected';
+            document.getElementById('authSub').textContent =
+              'Enter your App ID and Secret ID';
+            document.getElementById('sessionCard').style.display = 'none';
+          }
+        } catch (e) {}
+      }
+
+      function stepDone(n, done) {
+        const el = document.getElementById('s' + n);
+        if (!el) return;
+        el.className = 'step' + (done ? ' done' : n === 1 ? ' active' : '');
+      }
+
+      // ══════════════════════════════════════════════════════════════════════
+      // DASHBOARD
+      // ══════════════════════════════════════════════════════════════════════
+      function setMode(m) {
+        tradeMode = m;
+        document.getElementById('mReal').className =
+          'mode-btn' + (m === 'real' ? ' active-real' : '');
+        document.getElementById('mPaper').className =
+          'mode-btn' + (m === 'paper' ? ' active-paper' : '');
+        const infoEl = document.getElementById('modeInfoText');
+        if (m === 'real') {
+          infoEl.innerHTML =
+            '📈 <b style="color:#4ade80">Real Trade:</b> Live Fyers data + Orders placed to Fyers broker';
+        } else {
+          infoEl.innerHTML =
+            '📄 <b style="color:#fbbf24">Paper Trade:</b> SAME live Fyers data feed. Strategy runs identically. Only difference: orders are <b>NOT sent to broker</b> — simulated locally with real prices.';
+        }
+        const pill = document.getElementById('modePill');
+        pill.textContent = m === 'paper' ? 'PAPER' : 'LIVE';
+        pill.className = 'mode-pill mode-' + (m === 'paper' ? 'paper' : 'real');
+      }
+
+      function toggleIndex(idx) {
+        if (idx === 'nifty') {
+          niftyOn = !niftyOn;
+          const el = document.getElementById('idxNifty');
+          el.className = 'idx-btn' + (niftyOn ? ' active-nifty' : '');
+          document.getElementById('niftyStatus').textContent = niftyOn
+            ? '✓ Selected'
+            : 'Click to enable';
+        } else {
+          sensexOn = !sensexOn;
+          const el = document.getElementById('idxSensex');
+          el.className = 'idx-btn' + (sensexOn ? ' active-sensex' : '');
+          document.getElementById('sensexStatus').textContent = sensexOn
+            ? '✓ Selected'
+            : 'Click to enable';
+          document.getElementById('sensexDisabledBadge').textContent = sensexOn
+            ? '(active)'
+            : '(disabled)';
+        }
+      }
+
+      async function pollDash() {
+        try {
+          const d = await api('/dashboard');
+          const running = d.is_running;
+
+          // Header
+          const badge = document.getElementById('statusBadge');
+          badge.className = 'status-badge ' + (running ? 'live' : 'stopped');
+          badge.textContent = running ? '🟢 LIVE' : '🔴 STOPPED';
+          const pill = document.getElementById('modePill');
+          if (running) {
+            pill.style.display = 'inline';
+            pill.textContent = d.trade_mode === 'paper' ? 'PAPER' : 'REAL';
+            pill.className =
+              'mode-pill mode-' + (d.trade_mode === 'paper' ? 'paper' : 'real');
+          } else {
+            pill.style.display = 'none';
+          }
+
+          // Controls
+          document.getElementById('startBtn').style.display = running
+            ? 'none'
+            : 'inline-flex';
+          document.getElementById('stopBtn').style.display = running
+            ? 'inline-flex'
+            : 'none';
+          document.getElementById('activeInfo').style.display = running
+            ? 'block'
+            : 'none';
+
+          if (running) {
+            set('ceSymA', d.ce_symbol || '--');
+            set('peSymA', d.pe_symbol || '--');
+            set('ceSymLbl', d.ce_symbol || '--');
+            set('peSymLbl', d.pe_symbol || '--');
+            const si = document.getElementById('sensexActiveInfo');
+            if (d.sensex_enabled)
+              si.innerHTML = ` &nbsp;|&nbsp; SENSEX: <code style="color:#60a5fa">${d.sensex_ce_symbol || '--'}</code> / <code style="color:#f87171">${d.sensex_pe_symbol || '--'}</code>`;
+            else si.innerHTML = '';
+          }
+
+          // Market
+          set('niftySpot', d.nifty_spot ? num(d.nifty_spot) : '--');
+          set('sensexSpot', d.sensex_spot ? num(d.sensex_spot) : '--');
+          set('atmStrike', d.atm_strike || '--');
+          set('sensexAtm', d.sensex_atm || '--');
+          set('ceLtp', d.ce_ltp ? '₹' + d.ce_ltp.toFixed(2) : '--');
+          set('peLtp', d.pe_ltp ? '₹' + d.pe_ltp.toFixed(2) : '--');
+          set(
+            'sensexCeLtp',
+            d.sensex_ce_ltp ? '₹' + d.sensex_ce_ltp.toFixed(2) : '--',
+          );
+          set(
+            'sensexPeLtp',
+            d.sensex_pe_ltp ? '₹' + d.sensex_pe_ltp.toFixed(2) : '--',
+          );
+          set('dailyTrades', d.daily_trades || 0);
+          set('openCount', d.open_positions_count || 0);
+          set('openCnt', d.open_positions_count || 0);
+
+          const pnl = d.daily_pnl || 0;
+          const pe = document.getElementById('dailyPnl');
+          pe.textContent = '₹' + pnl.toFixed(0);
+          pe.style.color = pnl >= 0 ? '#4ade80' : '#f87171';
+
+          const avail = d.available_margin;
+          const used = d.used_margin;
+          set('availMargin', avail != null ? '₹' + num(avail) : '--');
+          set('usedMargin', used != null ? '₹' + num(used) : '--');
+          set('usedMargin2', used != null ? '₹' + num(used) : '--');
+
+          renderST('ceST', d.ce_supertrend);
+          renderST('peST', d.pe_supertrend);
+        } catch (e) {}
+      }
+
+      function num(v) {
+        return Number(v).toLocaleString('en-IN');
+      }
+
+      function renderST(id, st) {
+        const el = document.getElementById(id);
+        if (!st || st.direction === 'unknown') {
+          el.className = 'stbox st-wait';
+          el.innerHTML =
+            '<span style="color:#475569;font-size:13px">Waiting for candle data...</span>';
+          return;
+        }
+        const bull = st.direction === 'bullish';
+        el.className = 'stbox ' + (bull ? 'st-bull' : 'st-bear');
+        el.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-      <span style="color:${bull?'#4ade80':'#f87171'};font-size:16px;font-weight:700">${bull?'▲ BULLISH':'▼ BEARISH'}</span>
-      <span style="font-size:12px;color:#64748b;font-family:monospace">ST: ${(st.value||0).toFixed(2)}</span>
+      <span style="color:${bull ? '#4ade80' : '#f87171'};font-size:16px;font-weight:700">${bull ? '▲ BULLISH' : '▼ BEARISH'}</span>
+      <span style="font-size:12px;color:#64748b;font-family:monospace">ST: ${(st.value || 0).toFixed(2)}</span>
     </div>
     <div style="font-size:11px;color:#94a3b8">
-      Distance: <b>${(st.distance||0).toFixed(2)}</b>
-      ${st.signal_time?' | '+new Date(st.signal_time).toLocaleTimeString('en-IN'):''}
+      Distance: <b>${(st.distance || 0).toFixed(2)}</b>
+      ${st.signal_time ? ' | ' + new Date(st.signal_time).toLocaleTimeString('en-IN') : ''}
     </div>`;
-}
+      }
 
-async function startTrading(){
-  if(!niftyOn&&!sensexOn){ msg('tradingMsg','Select at least one index (NIFTY or SENSEX)','err'); return; }
-  document.getElementById('startBtn').disabled=true;
-  try{
-    const risk=await api('/settings/risk');
-    await api('/trading/start','POST',{
-      lot_size:risk.lot_size,
-      max_daily_loss:risk.max_daily_loss,
-      max_trades:risk.max_trades_per_day,
-      scaling_enabled:risk.scaling_enabled,
-      trade_mode:tradeMode,
-      nifty_enabled:niftyOn,
-      sensex_enabled:sensexOn
-    });
-    const modeTag=tradeMode==='paper'?'[PAPER] ':'';
-    msg('tradingMsg',`✅ ${modeTag}Trading engine started!`,'ok');
-  }catch(e){
-    msg('tradingMsg','❌ '+e.message,'err');
-    document.getElementById('startBtn').disabled=false;
-  }
-}
+      async function startTrading() {
+        if (!niftyOn && !sensexOn) {
+          msg(
+            'tradingMsg',
+            'Select at least one index (NIFTY or SENSEX)',
+            'err',
+          );
+          return;
+        }
+        document.getElementById('startBtn').disabled = true;
+        try {
+          const risk = await api('/settings/risk');
+          await api('/trading/start', 'POST', {
+            lot_size: risk.lot_size,
+            max_daily_loss: risk.max_daily_loss,
+            max_trades: risk.max_trades_per_day,
+            scaling_enabled: risk.scaling_enabled,
+            trade_mode: tradeMode,
+            nifty_enabled: niftyOn,
+            sensex_enabled: sensexOn,
+          });
+          const modeTag = tradeMode === 'paper' ? '[PAPER] ' : '';
+          msg('tradingMsg', `✅ ${modeTag}Trading engine started!`, 'ok');
+        } catch (e) {
+          msg('tradingMsg', '❌ ' + e.message, 'err');
+          document.getElementById('startBtn').disabled = false;
+        }
+      }
 
-async function stopTrading(){
-  await api('/trading/stop','POST');
-  document.getElementById('startBtn').disabled=false;
-}
+      async function stopTrading() {
+        await api('/trading/stop', 'POST');
+        document.getElementById('startBtn').disabled = false;
+      }
 
-// ══════════════════════════════════════════════════════════════════════
-// POSITIONS
-// ══════════════════════════════════════════════════════════════════════
-async function loadPos(){
-  try{
-    const [open,today]=await Promise.all([api('/positions/open'),api('/positions/today')]);
-    set('openCnt',open.length); set('todayCnt',today.length);
-    renderOpen(open); renderToday(today);
-  }catch(e){}
-}
+      // ══════════════════════════════════════════════════════════════════════
+      // POSITIONS
+      // ══════════════════════════════════════════════════════════════════════
+      async function loadPos() {
+        try {
+          const [open, today] = await Promise.all([
+            api('/positions/open'),
+            api('/positions/today'),
+          ]);
+          set('openCnt', open.length);
+          set('todayCnt', today.length);
+          renderOpen(open);
+          renderToday(today);
+        } catch (e) {}
+      }
 
-function paperBadge(isPaper){ return isPaper?'<span class="bdg bpaper">PAPER</span>':''; }
+      function paperBadge(isPaper) {
+        return isPaper ? '<span class="bdg bpaper">PAPER</span>' : '';
+      }
 
-function renderOpen(data){
-  const el=document.getElementById('sub-open');
-  if(!data.length){el.innerHTML='<div class="empty">No open positions</div>';return;}
-  let h=`<table><thead><tr><th>Symbol</th><th>Leg</th><th>Mode</th><th>Qty</th><th>Avg</th><th>LTP</th><th>Live P&L</th><th>Re-entry</th><th>ST</th><th>Time</th></tr></thead><tbody>`;
-  data.forEach(p=>{
-    h+=`<tr>
+      function renderOpen(data) {
+        const el = document.getElementById('sub-open');
+        if (!data.length) {
+          el.innerHTML = '<div class="empty">No open positions</div>';
+          return;
+        }
+        let h = `<table><thead><tr><th>Symbol</th><th>Leg</th><th>Mode</th><th>Qty</th><th>Avg</th><th>LTP</th><th>Live P&L</th><th>Re-entry</th><th>ST</th><th>Time</th></tr></thead><tbody>`;
+        data.forEach((p) => {
+          h += `<tr>
       <td><code style="color:#60a5fa;font-size:11px">${p.symbol}</code></td>
       <td><span class="bdg b${p.leg.toLowerCase()}">${p.leg}</span></td>
-      <td>${paperBadge(p.is_paper)||'<span class="bdg bop">REAL</span>'}</td>
-      <td>${p.qty}</td><td>₹${(p.avg_price||0).toFixed(2)}</td>
-      <td>₹${(p.ltp||0).toFixed(2)}</td>
-      <td class="${(p.live_pnl||0)>=0?'pp':'pn'}">₹${(p.live_pnl||0).toFixed(2)}</td>
-      <td><span class="bdg">${(p.reentry_count||0)+1}/3</span></td>
-      <td style="color:${p.supertrend_direction==='bullish'?'#4ade80':'#f87171'};font-size:12px">${p.supertrend_direction==='bullish'?'▲':'▼'} ${p.supertrend_direction}</td>
-      <td>${p.entry_time?new Date(p.entry_time).toLocaleTimeString('en-IN'):'--'}</td>
+      <td>${paperBadge(p.is_paper) || '<span class="bdg bop">REAL</span>'}</td>
+      <td>${p.qty}</td><td>₹${(p.avg_price || 0).toFixed(2)}</td>
+      <td>₹${(p.ltp || 0).toFixed(2)}</td>
+      <td class="${(p.live_pnl || 0) >= 0 ? 'pp' : 'pn'}">₹${(p.live_pnl || 0).toFixed(2)}</td>
+      <td><span class="bdg">${(p.reentry_count || 0) + 1}/3</span></td>
+      <td style="color:${p.supertrend_direction === 'bullish' ? '#4ade80' : '#f87171'};font-size:12px">${p.supertrend_direction === 'bullish' ? '▲' : '▼'} ${p.supertrend_direction}</td>
+      <td>${p.entry_time ? new Date(p.entry_time).toLocaleTimeString('en-IN') : '--'}</td>
     </tr>`;
-  });
-  el.innerHTML=h+'</tbody></table>';
-}
+        });
+        el.innerHTML = h + '</tbody></table>';
+      }
 
-function renderToday(data){
-  const el=document.getElementById('sub-today');
-  if(!data.length){el.innerHTML='<div class="empty">No trades today</div>';return;}
-  let h=`<table><thead><tr><th>Symbol</th><th>Leg</th><th>Mode</th><th>Qty</th><th>Entry</th><th>Exit</th><th>P&L</th><th>Status</th><th>Reason</th><th>Time</th></tr></thead><tbody>`;
-  data.forEach(t=>{
-    h+=`<tr>
+      function renderToday(data) {
+        const el = document.getElementById('sub-today');
+        if (!data.length) {
+          el.innerHTML = '<div class="empty">No trades today</div>';
+          return;
+        }
+        let h = `<table><thead><tr><th>Symbol</th><th>Leg</th><th>Mode</th><th>Qty</th><th>Entry</th><th>Exit</th><th>P&L</th><th>Status</th><th>Reason</th><th>Time</th></tr></thead><tbody>`;
+        data.forEach((t) => {
+          h += `<tr>
       <td><code style="color:#60a5fa;font-size:11px">${t.symbol}</code></td>
       <td><span class="bdg b${t.leg.toLowerCase()}">${t.leg}</span></td>
-      <td>${paperBadge(t.is_paper)||'<span class="bdg bop">REAL</span>'}</td>
-      <td>${t.qty}</td><td>₹${(t.entry_price||0).toFixed(2)}</td>
-      <td>${t.exit_price?'₹'+t.exit_price.toFixed(2):'--'}</td>
-      <td class="${(t.pnl||0)>=0?'pp':'pn'}">${t.pnl!=null?'₹'+t.pnl.toFixed(2):'--'}</td>
-      <td><span class="bdg ${t.status==='OPEN'?'bop':'bcl'}">${t.status}</span></td>
-      <td>${t.exit_reason||'--'}</td>
-      <td>${t.entry_time?new Date(t.entry_time).toLocaleTimeString('en-IN'):'--'}</td>
+      <td>${paperBadge(t.is_paper) || '<span class="bdg bop">REAL</span>'}</td>
+      <td>${t.qty}</td><td>₹${(t.entry_price || 0).toFixed(2)}</td>
+      <td>${t.exit_price ? '₹' + t.exit_price.toFixed(2) : '--'}</td>
+      <td class="${(t.pnl || 0) >= 0 ? 'pp' : 'pn'}">${t.pnl != null ? '₹' + t.pnl.toFixed(2) : '--'}</td>
+      <td><span class="bdg ${t.status === 'OPEN' ? 'bop' : 'bcl'}">${t.status}</span></td>
+      <td>${t.exit_reason || '--'}</td>
+      <td>${t.entry_time ? new Date(t.entry_time).toLocaleTimeString('en-IN') : '--'}</td>
     </tr>`;
-  });
-  el.innerHTML=h+'</tbody></table>';
-}
+        });
+        el.innerHTML = h + '</tbody></table>';
+      }
 
-// ══════════════════════════════════════════════════════════════════════
-// P&L
-// ══════════════════════════════════════════════════════════════════════
-async function loadPnL(){
-  try{
-    const [hist,trades]=await Promise.all([api('/pnl/history'),api('/pnl/trades')]);
-    pnlHistory=hist; allTrades=trades;
-    const totPnl=hist.reduce((s,d)=>s+d.total_pnl,0);
-    const totT=hist.reduce((s,d)=>s+d.total_trades,0);
-    const totW=hist.reduce((s,d)=>s+d.winning_trades,0);
-    const wr=totT>0?(totW/totT*100).toFixed(1):0;
-    const pe=document.getElementById('totPnl');
-    pe.textContent='₹'+totPnl.toFixed(2);
-    pe.style.color=totPnl>=0?'#4ade80':'#f87171';
-    set('totTrades',totT); set('winRate',wr+'%'); set('tradDays',hist.length);
-    drawChart(hist); drawDaily(hist); drawTrades(trades);
-  }catch(e){}
-}
+      // ══════════════════════════════════════════════════════════════════════
+      // P&L
+      // ══════════════════════════════════════════════════════════════════════
+      async function loadPnL() {
+        try {
+          const [hist, trades] = await Promise.all([
+            api('/pnl/history'),
+            api('/pnl/trades'),
+          ]);
+          pnlHistory = hist;
+          allTrades = trades;
+          const totPnl = hist.reduce((s, d) => s + d.total_pnl, 0);
+          const totT = hist.reduce((s, d) => s + d.total_trades, 0);
+          const totW = hist.reduce((s, d) => s + d.winning_trades, 0);
+          const wr = totT > 0 ? ((totW / totT) * 100).toFixed(1) : 0;
+          const pe = document.getElementById('totPnl');
+          pe.textContent = '₹' + totPnl.toFixed(2);
+          pe.style.color = totPnl >= 0 ? '#4ade80' : '#f87171';
+          set('totTrades', totT);
+          set('winRate', wr + '%');
+          set('tradDays', hist.length);
+          drawChart(hist);
+          drawDaily(hist);
+          drawTrades(trades);
+        } catch (e) {}
+      }
 
-function drawChart(hist){
-  const ctx=document.getElementById('eqChart').getContext('2d');
-  if(eqChart)eqChart.destroy();
-  const sorted=[...hist].reverse();
-  let cum=0;
-  eqChart=new Chart(ctx,{type:'line',data:{
-    labels:sorted.map(d=>d.date),
-    datasets:[{label:'Cumulative P&L (₹)',
-      data:sorted.map(d=>{cum+=d.total_pnl;return +cum.toFixed(2);}),
-      borderColor:'#60a5fa',backgroundColor:'rgba(96,165,250,.08)',
-      fill:true,tension:.3,pointRadius:4,pointBackgroundColor:'#60a5fa'}]
-  },options:{responsive:true,
-    plugins:{legend:{labels:{color:'#94a3b8'}}},
-    scales:{x:{ticks:{color:'#64748b'},grid:{color:'#1e293b'}},
-            y:{ticks:{color:'#64748b'},grid:{color:'#1e293b'}}}}});
-}
+      function drawChart(hist) {
+        const ctx = document.getElementById('eqChart').getContext('2d');
+        if (eqChart) eqChart.destroy();
+        const sorted = [...hist].reverse();
+        let cum = 0;
+        eqChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: sorted.map((d) => d.date),
+            datasets: [
+              {
+                label: 'Cumulative P&L (₹)',
+                data: sorted.map((d) => {
+                  cum += d.total_pnl;
+                  return +cum.toFixed(2);
+                }),
+                borderColor: '#60a5fa',
+                backgroundColor: 'rgba(96,165,250,.08)',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 4,
+                pointBackgroundColor: '#60a5fa',
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { labels: { color: '#94a3b8' } } },
+            scales: {
+              x: { ticks: { color: '#64748b' }, grid: { color: '#1e293b' } },
+              y: { ticks: { color: '#64748b' }, grid: { color: '#1e293b' } },
+            },
+          },
+        });
+      }
 
-function drawDaily(hist){
-  const el=document.getElementById('dailyTbl');
-  if(!hist.length){el.innerHTML='<div class="empty">No data</div>';return;}
-  let h=`<table><thead><tr><th>Date</th><th>P&L</th><th>Trades</th><th>Win</th><th>Loss</th><th>Win%</th></tr></thead><tbody>`;
-  hist.forEach(d=>{
-    const wr=d.total_trades>0?(d.winning_trades/d.total_trades*100).toFixed(1)+'%':'--';
-    h+=`<tr><td>${d.date}</td>
-      <td class="${d.total_pnl>=0?'pp':'pn'}">₹${d.total_pnl.toFixed(2)}</td>
+      function drawDaily(hist) {
+        const el = document.getElementById('dailyTbl');
+        if (!hist.length) {
+          el.innerHTML = '<div class="empty">No data</div>';
+          return;
+        }
+        let h = `<table><thead><tr><th>Date</th><th>P&L</th><th>Trades</th><th>Win</th><th>Loss</th><th>Win%</th></tr></thead><tbody>`;
+        hist.forEach((d) => {
+          const wr =
+            d.total_trades > 0
+              ? ((d.winning_trades / d.total_trades) * 100).toFixed(1) + '%'
+              : '--';
+          h += `<tr><td>${d.date}</td>
+      <td class="${d.total_pnl >= 0 ? 'pp' : 'pn'}">₹${d.total_pnl.toFixed(2)}</td>
       <td>${d.total_trades}</td><td style="color:#4ade80">${d.winning_trades}</td>
       <td style="color:#f87171">${d.losing_trades}</td><td>${wr}</td></tr>`;
-  });
-  el.innerHTML=h+'</tbody></table>';
-}
+        });
+        el.innerHTML = h + '</tbody></table>';
+      }
 
-function drawTrades(trades){
-  const el=document.getElementById('allTbl');
-  if(!trades.length){el.innerHTML='<div class="empty">No trades</div>';return;}
-  let h=`<table><thead><tr><th>Date</th><th>Symbol</th><th>Leg</th><th>Mode</th><th>Qty</th><th>Entry</th><th>Exit</th><th>P&L</th><th>Reason</th></tr></thead><tbody>`;
-  trades.forEach(t=>{
-    h+=`<tr><td>${t.date||'--'}</td>
+      function drawTrades(trades) {
+        const el = document.getElementById('allTbl');
+        if (!trades.length) {
+          el.innerHTML = '<div class="empty">No trades</div>';
+          return;
+        }
+        let h = `<table><thead><tr><th>Date</th><th>Symbol</th><th>Leg</th><th>Mode</th><th>Qty</th><th>Entry</th><th>Exit</th><th>P&L</th><th>Reason</th></tr></thead><tbody>`;
+        trades.forEach((t) => {
+          h += `<tr><td>${t.date || '--'}</td>
       <td><code style="color:#60a5fa;font-size:11px">${t.symbol}</code></td>
       <td><span class="bdg b${t.leg.toLowerCase()}">${t.leg}</span></td>
-      <td>${paperBadge(t.is_paper)||'<span class="bdg bop" style="font-size:10px">REAL</span>'}</td>
-      <td>${t.qty}</td><td>₹${(t.entry_price||0).toFixed(2)}</td>
-      <td>${t.exit_price?'₹'+t.exit_price.toFixed(2):'--'}</td>
-      <td class="${(t.pnl||0)>=0?'pp':'pn'}">${t.pnl!=null?'₹'+t.pnl.toFixed(2):'--'}</td>
-      <td>${t.exit_reason||'--'}</td></tr>`;
-  });
-  el.innerHTML=h+'</tbody></table>';
-}
+      <td>${paperBadge(t.is_paper) || '<span class="bdg bop" style="font-size:10px">REAL</span>'}</td>
+      <td>${t.qty}</td><td>₹${(t.entry_price || 0).toFixed(2)}</td>
+      <td>${t.exit_price ? '₹' + t.exit_price.toFixed(2) : '--'}</td>
+      <td class="${(t.pnl || 0) >= 0 ? 'pp' : 'pn'}">${t.pnl != null ? '₹' + t.pnl.toFixed(2) : '--'}</td>
+      <td>${t.exit_reason || '--'}</td></tr>`;
+        });
+        el.innerHTML = h + '</tbody></table>';
+      }
 
-function exportCSV(){
-  const hdr=['Date','Symbol','Leg','Mode','Qty','Entry','Exit','PnL','Reason','Status'];
-  const rows=allTrades.map(t=>[t.date,t.symbol,t.leg,t.is_paper?'PAPER':'REAL',t.qty,t.entry_price,t.exit_price,t.pnl,t.exit_reason,t.status]);
-  const csv=[hdr,...rows].map(r=>r.join(',')).join('\n');
-  const a=document.createElement('a');
-  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
-  a.download='trades_'+new Date().toISOString().slice(0,10)+'.csv';
-  a.click();
-}
+      function exportCSV() {
+        const hdr = [
+          'Date',
+          'Symbol',
+          'Leg',
+          'Mode',
+          'Qty',
+          'Entry',
+          'Exit',
+          'PnL',
+          'Reason',
+          'Status',
+        ];
+        const rows = allTrades.map((t) => [
+          t.date,
+          t.symbol,
+          t.leg,
+          t.is_paper ? 'PAPER' : 'REAL',
+          t.qty,
+          t.entry_price,
+          t.exit_price,
+          t.pnl,
+          t.exit_reason,
+          t.status,
+        ]);
+        const csv = [hdr, ...rows].map((r) => r.join(',')).join('\n');
+        const a = document.createElement('a');
+        a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+        a.download = 'trades_' + new Date().toISOString().slice(0, 10) + '.csv';
+        a.click();
+      }
 
-// ══════════════════════════════════════════════════════════════════════
-// SETTINGS
-// ══════════════════════════════════════════════════════════════════════
-async function saveTg(){
-  try{
-    await api('/profile/telegram','POST',{telegram_token:document.getElementById('tgTok').value,telegram_chat_id:document.getElementById('tgChat').value});
-    msg('tgMsg','✅ Saved!','ok');
-  }catch(e){msg('tgMsg','❌ '+e.message,'err');}
-}
+      // ══════════════════════════════════════════════════════════════════════
+      // SETTINGS
+      // ══════════════════════════════════════════════════════════════════════
+      async function saveTg() {
+        try {
+          await api('/profile/telegram', 'POST', {
+            telegram_token: document.getElementById('tgTok').value,
+            telegram_chat_id: document.getElementById('tgChat').value,
+          });
+          msg('tgMsg', '✅ Saved!', 'ok');
+        } catch (e) {
+          msg('tgMsg', '❌ ' + e.message, 'err');
+        }
+      }
 
-async function testTg(){
-  try{await saveTg();const d=await api('/profile/test-telegram','POST');msg('tgMsg',d.success?'✅ Message sent!':'❌ Failed',d.success?'ok':'err');}
-  catch(e){msg('tgMsg','❌ '+e.message,'err');}
-}
+      async function testTg() {
+        try {
+          await saveTg();
+          const d = await api('/profile/test-telegram', 'POST');
+          msg(
+            'tgMsg',
+            d.success ? '✅ Message sent!' : '❌ Failed',
+            d.success ? 'ok' : 'err',
+          );
+        } catch (e) {
+          msg('tgMsg', '❌ ' + e.message, 'err');
+        }
+      }
 
-function toggleScale(){
-  scalingOn=!scalingOn;
-  document.getElementById('scaleLabel').textContent=scalingOn?'✅ Enabled':'❌ Disabled';
-  document.getElementById('scalePill').className='tpill '+(scalingOn?'on':'off');
-}
+      function toggleScale() {
+        scalingOn = !scalingOn;
+        document.getElementById('scaleLabel').textContent = scalingOn
+          ? '✅ Enabled'
+          : '❌ Disabled';
+        document.getElementById('scalePill').className =
+          'tpill ' + (scalingOn ? 'on' : 'off');
+      }
 
-async function saveRisk(){
-  try{
-    await api('/settings/risk','POST',{
-      max_daily_loss:parseFloat(document.getElementById('rLoss').value)||10000,
-      max_trades_per_day:parseInt(document.getElementById('rTrades').value)||20,
-      lot_size:parseInt(document.getElementById('rLot').value)||50,
-      scaling_enabled:scalingOn
-    });
-    msg('riskMsg','✅ Saved!','ok');
-  }catch(e){msg('riskMsg','❌ '+e.message,'err');}
-}
+      async function saveRisk() {
+        try {
+          await api('/settings/risk', 'POST', {
+            max_daily_loss:
+              parseFloat(document.getElementById('rLoss').value) || 10000,
+            max_trades_per_day:
+              parseInt(document.getElementById('rTrades').value) || 20,
+            lot_size: parseInt(document.getElementById('rLot').value) || 50,
+            scaling_enabled: scalingOn,
+          });
+          msg('riskMsg', '✅ Saved!', 'ok');
+        } catch (e) {
+          msg('riskMsg', '❌ ' + e.message, 'err');
+        }
+      }
 
-async function loadSettings(){
-  try{
-    const r=await api('/settings/risk');
-    document.getElementById('rLoss').value=r.max_daily_loss||10000;
-    document.getElementById('rTrades').value=r.max_trades_per_day||20;
-    document.getElementById('rLot').value=r.lot_size||50;
-    scalingOn=r.scaling_enabled!==false;
-    document.getElementById('scaleLabel').textContent=scalingOn?'✅ Enabled':'❌ Disabled';
-    document.getElementById('scalePill').className='tpill '+(scalingOn?'on':'off');
-  }catch(e){}
-  try{
-    const p=await api('/profile');
-    if(p.telegram_token)document.getElementById('tgTok').value=p.telegram_token;
-    if(p.telegram_chat_id)document.getElementById('tgChat').value=p.telegram_chat_id;
-  }catch(e){}
-}
+      async function loadSettings() {
+        try {
+          const r = await api('/settings/risk');
+          document.getElementById('rLoss').value = r.max_daily_loss || 10000;
+          document.getElementById('rTrades').value = r.max_trades_per_day || 20;
+          document.getElementById('rLot').value = r.lot_size || 50;
+          scalingOn = r.scaling_enabled !== false;
+          document.getElementById('scaleLabel').textContent = scalingOn
+            ? '✅ Enabled'
+            : '❌ Disabled';
+          document.getElementById('scalePill').className =
+            'tpill ' + (scalingOn ? 'on' : 'off');
+        } catch (e) {}
+        try {
+          const p = await api('/profile');
+          if (p.telegram_token)
+            document.getElementById('tgTok').value = p.telegram_token;
+          if (p.telegram_chat_id)
+            document.getElementById('tgChat').value = p.telegram_chat_id;
+        } catch (e) {}
+      }
 
-// Boot
-checkAuth();
-loadSettings();
-pollDash();
-setInterval(pollDash,2000);
-setInterval(()=>{if(document.getElementById('page-positions').classList.contains('active'))loadPos();},3000);
-</script>
-</body>
+      // Boot
+      checkAuth();
+      loadSettings();
+      pollDash();
+      setInterval(pollDash, 2000);
+      setInterval(() => {
+        if (
+          document.getElementById('page-positions').classList.contains('active')
+        )
+          loadPos();
+      }, 3000);
+    </script>
+  </body>
 </html>
