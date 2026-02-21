@@ -163,18 +163,14 @@ tr:hover td{background:rgba(255,255,255,.02)}
     <!-- Step 1: Credentials -->
     <div class="card">
       <div class="ct">① App Credentials</div>
-      <!-- Redirect URI — auto detected -->
-      <div style="margin-bottom:16px;background:#0c1a33;border:1px solid #1e3a5f;border-radius:10px;padding:14px">
-        <div style="color:#93c5fd;font-size:12px;font-weight:600;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">
-          📋 Step 1 — Set this Redirect URL in Fyers
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:10px 14px">
-          <code id="redirectUriDisplay" style="color:#4ade80;font-size:13px;flex:1;font-family:monospace">Loading...</code>
-          <button class="btn bg btn-sm" onclick="copyRedirectUri()">📋 Copy</button>
-        </div>
-        <div style="margin-top:8px;font-size:12px;color:#64748b;line-height:1.6">
-          Go to <a href="https://myapi.fyers.in/dashboard" target="_blank" style="color:#60a5fa">myapi.fyers.in/dashboard</a> 
-          → your App → Edit → paste this URL in <b style="color:#94a3b8">Redirect URL</b> field → Save
+      <!-- One-time Fyers setup instructions -->
+      <div style="margin-bottom:16px;background:#0c1a33;border:1px solid #1e3a5f;border-radius:10px;padding:14px;font-size:12px;line-height:1.8;color:#93c5fd">
+        <b style="color:#60a5fa">⚙️ One-time Fyers app setup</b> (already done? skip this)<br>
+        Go to <a href="https://myapi.fyers.in/dashboard" target="_blank" style="color:#60a5fa">myapi.fyers.in/dashboard</a> → your App → Edit<br>
+        Set <b style="color:#fff">Redirect URL</b> to:
+        <div style="display:flex;align-items:center;gap:8px;margin:6px 0">
+          <code id="redirectUriDisplay" style="background:#0f172a;border:1px solid #334155;border-radius:6px;padding:6px 10px;color:#4ade80;font-size:12px;flex:1">Loading...</code>
+          <button class="btn bg btn-sm" onclick="copyRedirectUri()" style="white-space:nowrap">📋 Copy</button>
         </div>
         <div id="redirectCopyMsg"></div>
       </div>

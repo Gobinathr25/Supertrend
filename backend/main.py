@@ -99,16 +99,17 @@ async def initiate_login(db: AsyncSession = Depends(get_db)):
     if not app_id or not secret_id:
         raise HTTPException(400, "Save App ID and Secret ID first.")
 
-    redirect_uri = await repo.get("redirect_uri") or ""
-
-    # Auto-detect: if RENDER_EXTERNAL_URL is set (Render sets this automatically),
-    # use it as the redirect URI so user doesn't have to configure anything
-    if not redirect_uri:
-        render_url = os.environ.get("RENDER_EXTERNAL_URL", "").rstrip("/")
-        if render_url:
-            redirect_uri = f"{render_url}/api/auth/callback"
-            await repo.set("redirect_uri", redirect_uri)
-            logger.info(f"Auto-detected Render URL: {redirect_uri}")
+    # Redirect URI priority:
+    # 1. APP_REDIRECT_URI env var (set this in Render dashboard)
+    # 2. Saved in DB by user
+    # 3. localhost fallback for local dev
+    redirect_uri = (
+        os.environ.get("APP_REDIRECT_URI", "").strip()
+        or await repo.get("redirect_uri")
+        or ""
+    )
+    if redirect_uri:
+        await repo.set("redirect_uri", redirect_uri)
 
     auth = FyersAuth(app_id=app_id, secret_id=secret_id, redirect_uri=redirect_uri)
     using_local = not redirect_uri
@@ -144,11 +145,11 @@ async def auth_callback_hosted(request: Request, db: AsyncSession = Depends(get_
     repo      = ConfigRepo(db)
     app_id    = await repo.get("app_id")
     secret_id = await repo.get("secret_id")
-    ruri = await repo.get("redirect_uri") or ""
-    if not ruri:
-        render_url = os.environ.get("RENDER_EXTERNAL_URL", "").rstrip("/")
-        if render_url:
-            ruri = f"{render_url}/api/auth/callback"
+    ruri = (
+        os.environ.get("APP_REDIRECT_URI", "").strip()
+        or await repo.get("redirect_uri")
+        or ""
+    )
 
     if not app_id or not secret_id:
         return HTMLResponse(_cb_html("error", "❌ Not Configured", "Broker credentials missing."), status_code=400)
@@ -243,13 +244,11 @@ async def logout(db: AsyncSession = Depends(get_db)):
 async def get_redirect_uri(db: AsyncSession = Depends(get_db)):
     """Returns the exact redirect URI to register in Fyers app settings."""
     repo = ConfigRepo(db)
-    saved = await repo.get("redirect_uri") or ""
-    if not saved:
-        render_url = os.environ.get("RENDER_EXTERNAL_URL", "").rstrip("/")
-        if render_url:
-            saved = f"{render_url}/api/auth/callback"
-    if not saved:
-        saved = f"http://localhost:{FyersAuth.LOCAL_PORT}"
+    saved = (
+        os.environ.get("APP_REDIRECT_URI", "").strip()
+        or await repo.get("redirect_uri")
+        or f"http://localhost:{FyersAuth.LOCAL_PORT}"
+    )
     return {"redirect_uri": saved}
 
 
