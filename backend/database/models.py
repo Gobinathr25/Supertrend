@@ -12,12 +12,13 @@ import os
 def _resolve_db_path():
     env_path = os.environ.get("DATABASE_PATH")
     if env_path:
-        os.makedirs(os.path.dirname(os.path.abspath(env_path)), exist_ok=True)
-        return env_path
-    data_dir = "/data"
-    if os.path.isdir(data_dir):
-        return os.path.join(data_dir, "trading.db")
-    local = os.path.join(os.path.dirname(__file__), "..", "trading.db")
+        # Only use env path if the parent directory exists and is writable
+        parent = os.path.dirname(os.path.abspath(env_path))
+        if os.path.isdir(parent) and os.access(parent, os.W_OK):
+            return env_path
+        # Otherwise fall through to default
+    # Use app directory — always writable
+    local = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "trading.db")
     return os.path.abspath(local)
 
 DB_PATH = _resolve_db_path()

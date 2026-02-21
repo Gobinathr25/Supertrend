@@ -3,7 +3,7 @@ services:
     name: nifty-trading-bot
     runtime: python
     rootDir: backend
-    buildCommand: pip install -r requirements.txt
+    buildCommand: bash build.sh
     startCommand: python start.py
     plan: free
     envVars:
