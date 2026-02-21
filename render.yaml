@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: nifty-trading-bot
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    plan: free
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: DATABASE_PATH
+        value: /data/trading.db
+    disk:
+      name: trading-data
+      mountPath: /data
+      sizeGB: 1

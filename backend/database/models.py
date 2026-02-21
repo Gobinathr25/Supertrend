@@ -5,8 +5,9 @@ from datetime import datetime
 from typing import Optional
 import os
 
-# SQLite - stored as a file in the backend folder, zero setup needed
-DB_PATH = os.path.join(os.path.dirname(__file__), "..", "trading.db")
+# DB path: use DATABASE_PATH env var (set on Render with persistent disk)
+# Falls back to local trading.db for local development
+DB_PATH = os.environ.get("DATABASE_PATH") or os.path.join(os.path.dirname(__file__), "..", "trading.db")
 DATABASE_URL = f"sqlite+aiosqlite:///{os.path.abspath(DB_PATH)}"
 
 engine = create_async_engine(
