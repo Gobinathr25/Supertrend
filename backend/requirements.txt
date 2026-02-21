@@ -1,0 +1,16 @@
+fastapi
+uvicorn[standard]
+websockets
+fyers-apiv3
+aiosqlite
+sqlalchemy[asyncio]
+python-dotenv
+httpx
+pydantic
+pydantic-settings
+pandas
+numpy
+python-telegram-bot
+aiohttp
+python-multipart
+requests
