@@ -5,10 +5,23 @@ from datetime import datetime
 from typing import Optional
 import os
 
-# DB path: use DATABASE_PATH env var (set on Render with persistent disk)
-# Falls back to local trading.db for local development
-DB_PATH = os.environ.get("DATABASE_PATH") or os.path.join(os.path.dirname(__file__), "..", "trading.db")
-DATABASE_URL = f"sqlite+aiosqlite:///{os.path.abspath(DB_PATH)}"
+# DB path resolution:
+# 1. Use DATABASE_PATH env var if set
+# 2. Use /data/trading.db if /data directory exists (Render persistent disk)
+# 3. Fall back to local trading.db next to the backend folder
+def _resolve_db_path():
+    env_path = os.environ.get("DATABASE_PATH")
+    if env_path:
+        os.makedirs(os.path.dirname(os.path.abspath(env_path)), exist_ok=True)
+        return env_path
+    data_dir = "/data"
+    if os.path.isdir(data_dir):
+        return os.path.join(data_dir, "trading.db")
+    local = os.path.join(os.path.dirname(__file__), "..", "trading.db")
+    return os.path.abspath(local)
+
+DB_PATH = _resolve_db_path()
+DATABASE_URL = f"sqlite+aiosqlite:///{DB_PATH}"
 
 engine = create_async_engine(
     DATABASE_URL,
