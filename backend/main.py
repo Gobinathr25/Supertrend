@@ -19,7 +19,7 @@ from database.models import init_db, get_db, AsyncSessionLocal
 from database.operations import TradeRepo, DailyPnLRepo, ConfigRepo, LogRepo
 from services.orchestrator import orchestrator
 from services.fyers_auth import FyersAuth, start_local_callback_server, stop_local_callback_server
-from telegram.service import TelegramService
+from notifications.service import TelegramService
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

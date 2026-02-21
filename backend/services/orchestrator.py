@@ -6,7 +6,7 @@ from typing import Optional
 from .fyers_service import FyersService, ATMCalculator
 from .order_service import OrderService
 from strategy.engine import StrategyEngine
-from telegram.service import TelegramService
+from notifications.service import TelegramService
 from database.models import AsyncSessionLocal
 from database.operations import TradeRepo, DailyPnLRepo, LogRepo
 
